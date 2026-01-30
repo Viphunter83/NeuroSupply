@@ -1,0 +1,27 @@
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    APP_ENV: str = "development"
+    LOG_LEVEL: str = "INFO"
+    
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+    POSTGRES_HOST: str
+    POSTGRES_PORT: int = 5432
+    
+    PG_DSN: str # Full DSN usually constructed or provided
+    
+    REDIS_URL: str
+    
+    IIKO_API_LOGIN: str = ""
+    IIKO_API_KEY: str = ""
+    
+    BOT_TOKEN: str = ""
+    WEBAPP_URL: str = ""
+
+    class Config:
+        env_file = ".env"
+        extra = "ignore"
+
+settings = Settings()
