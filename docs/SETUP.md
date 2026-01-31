@@ -1,92 +1,59 @@
-# Установка и Конфигурация
+# Руководство по Настройке и Запуску
 
-## Предварительные требования
-*   Docker & Docker Compose
-*   Python 3.11+ (для локального запуска)
-*   PostgreSQL 16 (для локального запуска)
-*   Redis (для локального запуска)
+## Требования
+*   Git
+*   Docker & Docker Compose (для контейнеризации)
+*   Python 3.11+ (если запускаете без Docker)
+*   PostgreSQL 15+ (если запускаете без Docker)
 
-## Переменные Окружения
-Создайте файл `.env` в корне проекта. Пример содержимого:
+## 1. Конфигурация (.env)
+Все настройки хранятся в переменных окружения.
 
-```ini
-# Приложение
-APP_ENV=development
-LOG_LEVEL=INFO
+| Переменная | Описание | Пример |
+|------------|----------|--------|
+| `POSTGRES_SERVER` | Хост БД | `localhost` |
+| `POSTGRES_USER` | Пользователь БД | `postgres` |
+| `POSTGRES_PASSWORD` | Пароль БД | `changethis` |
+| `POSTGRES_DB` | Имя БД | `neurosupply` |
+| `IIKO_API_LOGIN` | Логин API iikoTransport | `demo_user` |
+| `TELEGRAM_BOT_TOKEN` | Токен от BotFather | `123:ABC...` |
 
-# PostgreSQL (Docker Internal)
-POSTGRES_USER=user
-POSTGRES_PASSWORD=password
-POSTGRES_DB=neurosupply
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
+## 2. Развертывание в Docker (Production-ready)
+Это самый простой способ запустить систему целиком (БД + API + Бот).
 
-# PostgreSQL Connection String
-# Для Docker контейнеров (используется host 'db')
-# PG_DSN=postgresql+asyncpg://user:password@db:5432/neurosupply
-# Для локального запуска скриптов (используется host 'localhost' и порт 5433)
-PG_DSN=postgresql+asyncpg://user:password@localhost:5433/neurosupply
+1.  Клонируйте репозиторий.
+2.  Создайте `.env`.
+3.  Запустите:
+    ```bash
+    docker-compose up -d --build
+    ```
+    *Эта команда скачает образы Postgres, Redis (будущее), соберет образ Backend и запустит все сервисы.*
 
-# Redis
-REDIS_URL=redis://redis:6379/0
-
-# Iiko Cloud API
-IIKO_API_LOGIN=ваш_логин_api
-IIKO_API_KEY=ваш_ключ_api
-
-# Telegram
-BOT_TOKEN=ваш_токен_бота
-WEBAPP_URL=https://your-webapp-domain.com
-```
-
-## Запуск в Docker (Рекомендуется)
-Полный стек (БД, Redis, API, Worker, Bot) запускается одной командой:
+## 3. Миграции Базы Данных
+При первом запуске (или обновлении схемы) необходимо применить миграции Alembic.
+В Docker это часто делается автоматически (через entrypoint), но можно и вручную:
 
 ```bash
-docker-compose up -d --build
+# Внутри контейнера или локально
+alembic upgrade head
 ```
-*   **API**: `http://localhost:8000`
-*   **DB**: Порт `5433` (снаружи), `5432` (внутри)
-*   **Redis**: Порт `6379`
 
-## Локальная Разработка
-1.  Создайте виртуальное окружение:
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-2.  Установите зависимости:
-    ```bash
-    pip install -e .
-    ```
-3.  Запустите необходимые сервисы (БД, Redis) через Docker (если нет локальных):
-    ```bash
-    docker-compose up -d db redis
-    ```
-4.  Примените миграции:
-    ```bash
-    alembic upgrade head
-    ```
-5.  Запустите API:
-    ```bash
-    uvicorn src.main:app --reload --port 8000
-    ```
+## 4. Загрузка Начальных Данных
+Для работы системы нужны справочники (Товары, Рестораны).
+Мы подготовили скрипт, загружающий данные из Excel (папка `data_samples`) и создающий тестовый Ресторан.
 
-## Полезные Команды
-
-### Миграции БД
-*   Создать новую миграцию:
-    ```bash
-    alembic revision --autogenerate -m "описание_изменений"
-    ```
-*   Применить миграции:
-    ```bash
-    alembic upgrade head
-    ```
-
-### Загрузка начальных данных
-Загрузка товаров из Excel файла:
 ```bash
-python src/scripts/load_initial_products.py
+# Локально
+export PYTHONPATH=$(pwd)
+./venv/bin/python src/scripts/load_initial_data.py
 ```
-**Примечание:** Убедитесь, что `PG_DSN` в `.env` настроен на `localhost` при запуске скрипта локально.
+
+## 5. Проверка Работоспособности
+1.  Откройте Telegram, найдите своего бота.
+2.  Нажмите `/start`.
+3.  Нажмите `/check`.
+4.  Если заказ не найден, запустите расчет принудительно:
+    ```bash
+    python src/scripts/verify_engine.py
+    ```
+5.  Снова нажмите `/check` в боте. Должен появиться черновик заказа с кнопкой подтверждения.

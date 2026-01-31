@@ -27,55 +27,27 @@ async def cmd_start(message: types.Message):
 @router.message(Command("check"))
 async def cmd_check_order(message: types.Message):
     """
-    Check for the latest draft order and offer confirmation.
+    Check for the latest draft order and offer confirmation via WebApp.
     """
-    await message.answer("Checking for draft orders...")
-    
-    # Needs to know Restaurant ID. 
-    # For MVP, hardcode or fetch from User mapping.
-    # We will use the VDNH ID for demo.
-    demo_org_id = settings.IIKO_ORG_ID 
+    demo_org_id = settings.IIKO_ORG_ID
     if not demo_org_id:
          await message.answer("Error: Org ID not configured.")
          return
 
-    async with async_session_maker() as db:
-        service = OrderService(db)
-        try:
-            # We need to convert string settings ID to UUID if needed, 
-            # but OrderService expects UUID.
-            import uuid
-            r_id = uuid.UUID(demo_org_id)
-            order = await service.get_latest_draft_order(r_id)
-            
-            if not order:
-                await message.answer("No draft orders found for this restaurant.")
-                return
-                
-            # Format Order
-            text = f"📋 <b>Draft Order Found!</b>\n"
-            text += f"ID: <code>{order.id}</code>\n"
-            text += f"Date: {order.created_at.strftime('%Y-%m-%d %H:%M')}\n"
-            text += f"Items: {len(order.items)}\n\n"
-            
-            # Show top 5 items
-            for i, item in enumerate(order.items[:5]):
-                text += f"{i+1}. {item['product_name']} - {item['quantity']} {item['unit']}\n"
-            
-            if len(order.items) > 5:
-                text += f"... and {len(order.items) - 5} more items."
-                
-            # Add Confirm Button
-            kb = [
-                [types.InlineKeyboardButton(text="✅ Confirm Order", callback_data=f"confirm_order:{order.id}")]
-            ]
-            keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
-            
-            await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
-            
-        except Exception as e:
-            logger.exception("Error checking order")
-            await message.answer(f"Error: {str(e)}")
+    # Construct WebApp URL with query param
+    # Make sure WEBAPP_URL is set in .env, e.g. http://localhost:3000
+    base_url = settings.WEBAPP_URL or "http://localhost:3000"
+    webapp_url = f"{base_url}?restaurant_id={demo_org_id}"
+
+    kb = [
+        [types.KeyboardButton(
+            text="Открыть заказ / Mở đơn hàng", 
+            web_app=WebAppInfo(url=webapp_url)
+        )]
+    ]
+    keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+    
+    await message.answer("Click the button below to review and confirm the order:", reply_markup=keyboard)
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith("confirm_order:"))

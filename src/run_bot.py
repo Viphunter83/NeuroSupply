@@ -10,11 +10,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 async def main():
-    if not settings.TELEGRAM_BOT_TOKEN:
-        logger.error("TELEGRAM_BOT_TOKEN is not set!")
+    if not settings.BOT_TOKEN:
+        logger.error("BOT_TOKEN is not set!")
         return
 
-    bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
+    bot = Bot(token=settings.BOT_TOKEN)
     dp = Dispatcher()
     
     # Register routers

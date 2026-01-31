@@ -8,6 +8,8 @@ from src.db.models import OrderStatus
 class OrderItem(BaseModel):
     product_id: str
     product_name: str
+    product_name_vn: Optional[str] = None
+    image_url: Optional[str] = None
     unit: str
     quantity: float
     predicted_usage: float

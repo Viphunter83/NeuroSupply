@@ -1,65 +1,55 @@
-# Архитектура Системы
+# Архитектура NeuroSupply
+
+Система построена по микросервисной (в будущем) архитектуре, но на данном этапе является модульным монолитом.
 
 ## Компоненты
 
 ### 1. Core API (FastAPI)
-Центральный компонент, обеспечивающий взаимодействие между фронтендом (Telegram WebApp), базой данных и внешними сервисами.
-*   **Endpoints**: `/api/v1/*`
-*   **Documentation**: Swagger UI (`/docs`)
+Центральный узел системы.
+*   **Responsibilities**:
+    *   Принимает запросы от фронтенда (в будущем) и внешних систем.
+    *   Управляет циклом жизни заказа (Draft -> Verified -> Sent).
+    *   Предоставляет данные для Telegram Бота.
+*   **Location**: `src/api`
 
-### 2. Database (PostgreSQL)
-Хранит все данные системы. Использует асинхронный драйвер `asyncpg`.
-**Основные сущности**:
-*   `Users`: Пользователи системы (админы, менеджеры).
-*   `Restaurants`: Рестораны, подключенные к системе.
-*   `Products`: Номенклатура товаров (сырье, полуфабрикаты).
-*   `Orders`: Заказы на закупку/производство.
+### 2. Calculation Engine
+Модуль бизнес-логики для расчета потребностей.
+*   **Algorithm**:
+    1.  Запрашивает план продаж (или 7-дневную историю).
+    2.  Запрашивает текущие остатки (iiko/Mock).
+    3.  Вычисляет прогноз расхода: `Predicted = AvgDailyUsage * SalesPlanMultiplier`.
+    4.  Вычисляет потребность: `Need = (Predicted * SafetyStock) - CurrentStock`.
+    5.  Округляет до упаковок поставщика.
+*   **DataSource**: `SalesPlan` (DB), `StockBalance` (DB/Iiko).
+*   **Location**: `src/services/calculation`
 
-### 3. Worker (TaskIQ)
-Выполняет фоновые задачи:
-*   Синхронизация с Iiko Cloud (меню, остатки, продажи).
-*   Периодический пересчет прогнозов.
-*   Отправка уведомлений.
+### 3. Iiko Client
+Адаптер для взаимодействия с iikoTransport API.
+*   **Capabilities**:
+    *   Auth (Token refresh).
+    *   Fetch Products (Nomenclature).
+    *   Fetch Sales (OLAP Reports).
+*   **Location**: `src/services/iiko`
 
 ### 4. Telegram Bot (Aiogram)
-Интерфейс для пользователей.
-*   **Команды**: `/start`, авторизация.
-*   **WebApp**: Встроенное веб-приложение для формирования и проверки заказов.
+Интерфейс для персонала ресторана.
+*   **Features**:
+    *   Polling-режим (запускается отдельно).
+    *   Использует `OrderService` для доступа к данным (Shared Codebase).
+*   **Location**: `src/bot`, `src/run_bot.py`
 
-### 5. Integration: Iiko Cloud
-Внешняя POS-система.
-*   **Service**: `src/services/iiko/client.py`
-*   Используется для получения справочников товаров и данных о движениях складов.
+### 5. Database (PostgreSQL)
+Основное хранилище данных.
+*   **Schema**:
+    *   `products`: Справочник товаров (связь с iiko_id).
+    *   `restaurants`: Справочник точек.
+    *   `orders`: Заказы (JSONB items).
+    *   `sales_plans`: Планы выручки.
 
----
-## Схема Базы Данных (Упрощенно)
+## Поток Данных (Data Flow)
 
-```mermaid
-erDiagram
-    Restaurant ||--o{ User : "has staff"
-    Restaurant ||--o{ Order : "places"
-    Product ||--o{ OrderItem : "included in"
-    Order ||--o{ OrderItem : "contains"
-    
-    Product {
-        uuid id
-        string name_ru
-        string name_vn
-        string iiko_id
-        string unit
-    }
-    
-    Order {
-        uuid id
-        date date
-        string status
-        uuid restaurant_id
-    }
-```
-
-## Логика "Умного" Заказа
-1.  **Сбор данных**: Worker регулярно забирает остатки и продажи из Iiko.
-2.  **Прогноз**: На основе исторических данных рассчитывается `forecast_sales` (прогноз продаж).
-3.  **Draft**: API рассчитывает `amount_needed` = `forecast_sales` - `current_stock` + `buffer`.
-4.  **Верификация**: Пользователь в WebApp видит Draft, корректирует `amount_needed` и отправляет `Verify`.
-5.  **Экспорт**: Подтвержденный заказ отправляется обратно в Iiko (или поставщикам).
+1.  **Sync**: Скрипт (или Celery task) загружает Nomenclatures, Sales, Stocks из iiko -> DB.
+2.  **Calculation**: `CalculationEngine` читает DB -> Создает `Order` (status=DRAFT).
+3.  **Notification**: Менеджер получает уведомление (или сам пишет `/check`).
+4.  **Confirmation**: Менеджер жмет "Confirm" -> API обновляет статус на `VERIFIED_BY_COOK`.
+5.  **Export** (Future): Система отправляет заказ поставщику (Email/API).

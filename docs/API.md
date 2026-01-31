@@ -1,48 +1,52 @@
 # API Documentation
 
-Ниже описаны основные эндпоинты API. Полная интерактивная документация доступна по адресу `http://localhost:8000/docs`.
+## Base URL
+Local: `http://localhost:8000/api/v1`
+
+## Authentication
+*(В разработке)* В данный момент API открыт. В будущем будет использоваться JWT Bearer Token.
+
+---
 
 ## Orders (Заказы)
 
-### 1. Получение Черновика Заказа (Draft)
-Рассчитывает потребность в товарах на основе текущих остатков и прогноза.
+### Get Latest Draft Order
+Получает последний черновик заказа для указанного ресторана.
 
-*   **URL**: `/api/v1/order/draft`
-*   **Method**: `GET`
+*   **Endpoint**: `GET /order/latest`
 *   **Query Params**:
-    *   `restaurant_id` (UUID): ID ресторана.
-*   **Response**:
+    *   `restaurant_id` (UUID): ID ресторана (обязательно).
+*   **Response (200 OK)**:
     ```json
     {
-      "date": "2026-01-30",
-      "restaurant_id": "...",
+      "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "restaurant_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "created_at": "2026-01-31T10:00:00Z",
+      "status": "DRAFT",
       "items": [
         {
-          "product_id": "...",
-          "product_name_ru": "Огурцы",
-          "amount_needed": 10.0,
-          "current_stock": 5.0,
-          "forecast_sales": 15.0
+          "product_id": "uuid",
+          "product_name": "Milk",
+          "quantity": 5,
+          "stock": 2
         }
       ]
     }
     ```
 
-### 2. Подтверждение Заказа (Verify)
-Создает подтвержденный заказ в системе на основе данных от пользователя.
+### Confirm Order
+Подтверждает заказ (переводит статус в `VERIFIED_BY_COOK`).
 
-*   **URL**: `/api/v1/order/verify`
-*   **Method**: `POST`
-*   **Body**:
-    ```json
-    {
-      "restaurant_id": "...",
-      "items": [
-        {
-          "product_id": "...",
-          "amount": 10.0
-        }
-      ]
-    }
-    ```
-*   **Response**: Объект созданного заказа.
+*   **Endpoint**: `POST /order/{order_id}/confirm`
+*   **Path Params**:
+    *   `order_id` (UUID): ID заказа.
+*   **Response (200 OK)**:
+    *   Возвращает обновленный объект Order с новым статусом.
+
+---
+
+## Health Check
+
+### Service Health
+*   **Endpoint**: `GET /health`
+*   **Response**: `{"status": "ok", "env": "dev"}`

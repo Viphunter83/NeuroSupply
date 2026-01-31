@@ -1,21 +1,27 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from uuid import UUID
-from src.services.order import OrderService
-from src.services.calculation import CalculationService
-from src.schemas.order import OrderDraftResponse, OrderVerifyRequest
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.api.deps import get_session
+from src.services.order_service import OrderService
+from src.schemas.order import OrderResponse
 
 router = APIRouter()
 
-@router.get("/draft", response_model=OrderDraftResponse)
-async def get_order_draft(
-    restaurant_id: UUID,
-    calc_service: CalculationService = Depends()
+@router.get("/latest", response_model=OrderResponse)
+async def get_latest_order(
+    restaurant_id: UUID, 
+    db: AsyncSession = Depends(get_session)
 ):
-    return await calc_service.calculate_draft(restaurant_id)
+    service = OrderService(db)
+    order = await service.get_latest_draft_order(restaurant_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="No draft order found")
+    return order
 
-@router.post("/verify")
-async def verify_order(
-    request: OrderVerifyRequest,
-    order_service: OrderService = Depends()
+@router.post("/{order_id}/confirm", response_model=OrderResponse)
+async def confirm_order(
+    order_id: UUID, 
+    db: AsyncSession = Depends(get_session)
 ):
-    return await order_service.create_order(request)
+    service = OrderService(db)
+    return await service.confirm_order(order_id)
