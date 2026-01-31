@@ -1,0 +1,1917 @@
+{
+  "correlationId": "fd76370c-1466-4880-bba4-48b0b4c4d6a1",
+  "groups": [],
+  "productCategories": [
+    {
+      "id": "9180415c-adb9-0f78-016e-92d9c48cbfe8",
+      "name": "07 Товар (шт)",
+      "isDeleted": false
+    },
+    {
+      "id": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "name": "08 Допы",
+      "isDeleted": false
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72a36203e0d4",
+      "name": "11 Модификаторы",
+      "isDeleted": false
+    },
+    {
+      "id": "0a36c923-634e-5447-0180-dbf6e3432350",
+      "name": "12 Акции",
+      "isDeleted": false
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-46de1b1fc1e8",
+      "name": "Прочие медикаменты",
+      "isDeleted": false
+    },
+    {
+      "id": "75c13808-de2c-7625-019b-21e55136b4ed",
+      "name": "Кондименты",
+      "isDeleted": false
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd470d7c",
+      "name": "Хозтовары",
+      "isDeleted": false
+    },
+    {
+      "id": "c296bc09-4552-e84e-0163-b804a92bae47",
+      "name": "05 Пиво",
+      "isDeleted": false
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72a36203c1fa",
+      "name": "09 Доставка курьером",
+      "isDeleted": false
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72ef2c1c0dd4",
+      "name": "07 Товар (шт) доставка",
+      "isDeleted": false
+    },
+    {
+      "id": "bc43a789-a477-4970-016d-de8cca28a01b",
+      "name": "Специи",
+      "isDeleted": false
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-4a0484c617f4",
+      "name": "Списание",
+      "isDeleted": false
+    },
+    {
+      "id": "f384b925-7c93-fb9e-0175-54ccad24adee",
+      "name": "Форменная одежда",
+      "isDeleted": false
+    },
+    {
+      "id": "fc00b42f-ba4d-e49c-0168-b95251bf5118",
+      "name": "Блюдо 2",
+      "isDeleted": true
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72ef2c1c07ae",
+      "name": "01 Блюда доставка",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2e03",
+      "name": "03 Вьетфрукты с собой",
+      "isDeleted": true
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2e06",
+      "name": "04 Миксы с собой",
+      "isDeleted": true
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-6844a757409e",
+      "name": "Антисептики",
+      "isDeleted": true
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2e16",
+      "name": "05 Пиво с собой",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-d23b48a785a3",
+      "name": "04 Миксы доставка",
+      "isDeleted": true
+    },
+    {
+      "id": "266c3673-32e6-4fc3-0166-c603b0fbca1c",
+      "name": "Овощи",
+      "isDeleted": false
+    },
+    {
+      "id": "9180415c-adb9-0f78-016e-930eade8444d",
+      "name": "10 Меню персонала",
+      "isDeleted": false
+    },
+    {
+      "id": "fc00b42f-ba4d-e49c-0168-b95251bf5113",
+      "name": "Блюда 2",
+      "isDeleted": true
+    },
+    {
+      "id": "f384b925-7c93-fb9e-0175-5a93a2ff401a",
+      "name": "Мясные и рыбные продукты",
+      "isDeleted": false
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72ef2c1c3bc2",
+      "name": "Прочие категории",
+      "isDeleted": false
+    },
+    {
+      "id": "9180415c-adb9-0f78-016e-930eade83a9c",
+      "name": "02 Шейки",
+      "isDeleted": false
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72a362037f87",
+      "name": "01 ",
+      "isDeleted": true
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2d26",
+      "name": "01 Блюда с собой",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2de0",
+      "name": "Вьетфрукты с собой",
+      "isDeleted": true
+    },
+    {
+      "id": "363a8a6c-76d1-5cb2-018a-dc77358002dd",
+      "name": "Скидка",
+      "isDeleted": false
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-46de1b1fc1eb",
+      "name": "Маски",
+      "isDeleted": false
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd47eb5c",
+      "name": "Товары Даниловский",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd470d7b",
+      "name": "01 Блюда",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-d23b48a7bca8",
+      "name": "03 Вьетфрукты доставка",
+      "isDeleted": true
+    },
+    {
+      "id": "36af53c7-b113-2d8d-0190-78d4ed0d1086",
+      "name": "Однораз. посуда для списаний",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2d63",
+      "name": "02 Шейки с собой",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2e1b",
+      "name": "06 Напитки с собой",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b40c1",
+      "name": "07 Товар (шт) с собой",
+      "isDeleted": false
+    },
+    {
+      "id": "974e9f89-cd66-3fd5-016b-4bbe824fdc45",
+      "name": "04 Миксы",
+      "isDeleted": true
+    },
+    {
+      "id": "bc43a789-a477-4970-016d-de8cca289cc3",
+      "name": "03 Вьетфрукты",
+      "isDeleted": true
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-46de1b1fbc24",
+      "name": "Канцелярия",
+      "isDeleted": false
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-46de1b1fbc3b",
+      "name": "Тайгета",
+      "isDeleted": false
+    },
+    {
+      "id": "f384b925-7c93-fb9e-0175-5a93a2ff26a7",
+      "name": "Порча не фрукты",
+      "isDeleted": false
+    },
+    {
+      "id": "fc00b42f-ba4d-e49c-0169-3a0a88c82a6d",
+      "name": "06 Напитки",
+      "isDeleted": false
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-b0067edd0503",
+      "name": "Канцтовары",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd470d81",
+      "name": "Посуда",
+      "isDeleted": false
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd470d82",
+      "name": "Другое",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd47eb4f",
+      "name": "Товары Ламара",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd47eb59",
+      "name": "Товары Камал",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd47eb5a",
+      "name": "Фрукты",
+      "isDeleted": false
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72ef2c1c0dd3",
+      "name": "02 Шейки доставка",
+      "isDeleted": false
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-b0067edd0504",
+      "name": "Товары одноразовое",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-b0067edd0505",
+      "name": "Заготовки ночные",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-b0067edd0506",
+      "name": "Товары Вьет",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd470cf8",
+      "name": "Заготовки утренние",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd47eb9a",
+      "name": "Товары поставщики",
+      "isDeleted": true
+    },
+    {
+      "id": "c296bc09-4552-e84e-0163-b804a92bb123",
+      "name": "Однораз посуда",
+      "isDeleted": false
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd47eb5b",
+      "name": "Товары одноразовое",
+      "isDeleted": true
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-46de1b1fbda3",
+      "name": "Перчатки",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2e19",
+      "name": "06 Напитки доставка",
+      "isDeleted": false
+    },
+    {
+      "id": "5e0e479f-ef81-9bfb-0196-588a261a5b6c",
+      "name": "13 Доставка Дан",
+      "isDeleted": false
+    },
+    {
+      "id": "0597b213-19d2-fe45-019b-e4a196b9b332",
+      "name": "14 Ланчи",
+      "isDeleted": false
+    }
+  ],
+  "products": [
+    {
+      "fatAmount": 0.0,
+      "proteinsAmount": 0.0,
+      "carbohydratesAmount": 0.0,
+      "energyAmount": 0.0,
+      "fatFullAmount": 0.0,
+      "proteinsFullAmount": 0.0,
+      "carbohydratesFullAmount": 0.0,
+      "energyFullAmount": 0.0,
+      "weight": 0.37,
+      "groupId": "6457c184-a956-4554-b7c3-fd149ec4901a",
+      "productCategoryId": "eb4cace0-d26f-4a1d-0177-72ef2c1c0dd4",
+      "type": "Dish",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": null,
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "d0ef9b94-2c2d-4af0-b9b2-25f0bfcbc274",
+      "code": "01053",
+      "name": "Пачка Конфеты Желе (доставка)",
+      "description": "",
+      "additionalInfo": null,
+      "tags": [],
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 3.371,
+      "proteinsAmount": 6.126,
+      "carbohydratesAmount": 6.217,
+      "energyAmount": 78.478,
+      "fatFullAmount": 33.71,
+      "proteinsFullAmount": 61.26,
+      "carbohydratesFullAmount": 62.17,
+      "energyFullAmount": 784.78,
+      "weight": 1.0,
+      "groupId": "606f7483-acff-427b-8285-fda4355479ed",
+      "productCategoryId": "eb4cace0-d26f-4a1d-0177-72ef2c1c07ae",
+      "type": "Dish",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [
+        {
+          "id": "e66c42d8-3726-4969-bb88-1df21faabf8a",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "ba6aa1fe-1fe2-44d0-8211-040c4ccd4ed4",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "70f46b0c-f1f2-40ed-907f-4fa2698759bc",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "edc4be75-579a-4f7e-8b4f-7341e118f087",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "5ec252a9-7d40-4d51-835a-053348aef961",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "cacc77b6-db1b-450a-b972-7e70d2254af8",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "6e5392b6-cf9f-481f-92fd-5b2f5a529b5a",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "5ed6e511-a3e8-4b8c-9bb2-41893cd5454d",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "c8b75e12-5a1d-41c5-901c-71468f4c2664",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        }
+      ],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": null,
+      "order": 1,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "0f367d0b-bb6f-4368-a936-7375ae3bce18",
+      "code": "01046",
+      "name": "Фо Бо (доставка)",
+      "description": "",
+      "additionalInfo": null,
+      "tags": [],
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 3.7,
+      "proteinsAmount": 7.5,
+      "carbohydratesAmount": 6.2,
+      "energyAmount": 85.9,
+      "fatFullAmount": 37.0,
+      "proteinsFullAmount": 75.0,
+      "carbohydratesFullAmount": 62.0,
+      "energyFullAmount": 859.0,
+      "weight": 1.0,
+      "groupId": "606f7483-acff-427b-8285-fda4355479ed",
+      "productCategoryId": "eb4cace0-d26f-4a1d-0177-72ef2c1c07ae",
+      "type": "Dish",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [
+        {
+          "id": "ba6aa1fe-1fe2-44d0-8211-040c4ccd4ed4",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "70f46b0c-f1f2-40ed-907f-4fa2698759bc",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "edc4be75-579a-4f7e-8b4f-7341e118f087",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "5ec252a9-7d40-4d51-835a-053348aef961",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "cacc77b6-db1b-450a-b972-7e70d2254af8",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "5ed6e511-a3e8-4b8c-9bb2-41893cd5454d",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "6e5392b6-cf9f-481f-92fd-5b2f5a529b5a",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "e66c42d8-3726-4969-bb88-1df21faabf8a",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "363d0b12-4079-4787-9119-5d6c8ae01c9c",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "c8b75e12-5a1d-41c5-901c-71468f4c2664",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 10,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        }
+      ],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": null,
+      "order": 2,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "f5e1a5a4-4ff2-4a4e-9909-9edf702a159e",
+      "code": "01047",
+      "name": "Фо Га (доставка)",
+      "description": "",
+      "additionalInfo": null,
+      "tags": [],
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 17.322,
+      "proteinsAmount": 6.868,
+      "carbohydratesAmount": 22.547,
+      "energyAmount": 273.542,
+      "fatFullAmount": 155.898,
+      "proteinsFullAmount": 61.812,
+      "carbohydratesFullAmount": 202.923,
+      "energyFullAmount": 2461.878,
+      "weight": 0.9,
+      "groupId": "d94a2a69-8d1d-4c4f-9f22-307d77a22415",
+      "productCategoryId": "eb4cace0-d26f-4a1d-0177-72ef2c1c07ae",
+      "type": "Dish",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [
+        {
+          "id": "57a4ff77-5a72-45f1-9d4c-870c5db213fb",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 1,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "70f46b0c-f1f2-40ed-907f-4fa2698759bc",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 1,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "edc4be75-579a-4f7e-8b4f-7341e118f087",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 1,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        }
+      ],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": null,
+      "order": 3,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "d3517292-bc62-4cab-beef-9fa41802f7cd",
+      "code": "01048",
+      "name": "Бун Ча (доставка)",
+      "description": "",
+      "additionalInfo": null,
+      "tags": [],
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 53.043,
+      "proteinsAmount": 27.451,
+      "carbohydratesAmount": 26.229,
+      "energyAmount": 688.338,
+      "fatFullAmount": 79.5645,
+      "proteinsFullAmount": 41.1765,
+      "carbohydratesFullAmount": 39.3435,
+      "energyFullAmount": 1032.507,
+      "weight": 0.15,
+      "groupId": "6457c184-a956-4554-b7c3-fd149ec4901a",
+      "productCategoryId": "eb4cace0-d26f-4a1d-0177-72ef2c1c07ae",
+      "type": "Dish",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [
+        {
+          "id": "aa10639c-11fe-4fa4-aa06-548d4cac4b95",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 1,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "e4f6c647-b23f-4869-ab24-ade4e96a1a46",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 1,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        }
+      ],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": null,
+      "order": 4,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "41ee47ba-024d-41d9-91d5-771be7acc1ed",
+      "code": "01042",
+      "name": "Нэм 3 шт. (доставка)",
+      "description": "",
+      "additionalInfo": null,
+      "tags": [],
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 7.053,
+      "proteinsAmount": 25.81,
+      "carbohydratesAmount": 35.187,
+      "energyAmount": 301.751,
+      "fatFullAmount": 11.2848,
+      "proteinsFullAmount": 41.296,
+      "carbohydratesFullAmount": 56.2992,
+      "energyFullAmount": 482.8016,
+      "weight": 0.16,
+      "groupId": "6457c184-a956-4554-b7c3-fd149ec4901a",
+      "productCategoryId": "eb4cace0-d26f-4a1d-0177-72ef2c1c07ae",
+      "type": "Dish",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [
+        {
+          "id": "e4f6c647-b23f-4869-ab24-ade4e96a1a46",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 1,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "aa10639c-11fe-4fa4-aa06-548d4cac4b95",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 1,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        }
+      ],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": null,
+      "order": 5,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "579d6a64-bb4e-44e6-88d0-10cdc64506a4",
+      "code": "01044",
+      "name": "Гой Куон 2 шт. (доставка)",
+      "description": "",
+      "additionalInfo": null,
+      "tags": [],
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 9.388,
+      "proteinsAmount": 11.482,
+      "carbohydratesAmount": 35.641,
+      "energyAmount": 267.312,
+      "fatFullAmount": 41.49496,
+      "proteinsFullAmount": 50.75044,
+      "carbohydratesFullAmount": 157.53322,
+      "energyFullAmount": 1181.51904,
+      "weight": 0.442,
+      "groupId": "0f14ade2-145c-4e9d-9baa-27fcbf6ba891",
+      "productCategoryId": "eb4cace0-d26f-4a1d-0177-72ef2c1c07ae",
+      "type": "Dish",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [
+        {
+          "id": "cacc77b6-db1b-450a-b972-7e70d2254af8",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 1,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        }
+      ],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": null,
+      "order": 6,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "42bc0ec4-dd05-48ba-b2bb-88ee716b05ce",
+      "code": "01045",
+      "name": "Мьен Сао Га (доставка)",
+      "description": "",
+      "additionalInfo": null,
+      "tags": [],
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 0.045,
+      "proteinsAmount": 0.075,
+      "carbohydratesAmount": 6.023,
+      "energyAmount": 27.242,
+      "fatFullAmount": 0.225,
+      "proteinsFullAmount": 0.375,
+      "carbohydratesFullAmount": 30.115,
+      "energyFullAmount": 136.21,
+      "weight": 0.5,
+      "groupId": "4b7011e9-e9c7-41dd-b1a0-340444d88a92",
+      "productCategoryId": "eb4cace0-d26f-4a1d-0177-72ef2c1c0dd3",
+      "type": "Dish",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [
+        {
+          "id": "fb216a6c-8b9d-457b-b755-a73571f49ee1",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 1,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        },
+        {
+          "id": "3e91a52e-c483-4836-b6dc-dad2112682cc",
+          "defaultAmount": 0,
+          "minAmount": 0,
+          "maxAmount": 1,
+          "required": false,
+          "hideIfDefaultAmount": false,
+          "splittable": false,
+          "freeOfChargeAmount": 0
+        }
+      ],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": null,
+      "order": 7,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "36353b23-35ca-412c-8f78-fd9aa5fc5cc6",
+      "code": "01050",
+      "name": "Манго шейк (В) (доставка)",
+      "description": "",
+      "additionalInfo": null,
+      "tags": [],
+      "isDeleted": true,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 0.0,
+      "proteinsAmount": 0.0,
+      "carbohydratesAmount": 0.0,
+      "energyAmount": 0.0,
+      "fatFullAmount": 0.0,
+      "proteinsFullAmount": 0.0,
+      "carbohydratesFullAmount": 0.0,
+      "energyFullAmount": 0.0,
+      "weight": 1.0,
+      "groupId": "c1fb7f3b-9a9a-45e6-a8fe-7d5ca9f64812",
+      "productCategoryId": "eb4cace0-d26f-4a1d-0177-72a36203c1fa",
+      "type": "Service",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "шт",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 350.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": null,
+      "order": 8,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "УСЛУГА",
+      "id": "ae14023f-fa42-42a8-ac96-eb79271688cc",
+      "code": "01055",
+      "name": "Доставка курьером",
+      "description": "",
+      "additionalInfo": null,
+      "tags": [],
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 1.668,
+      "proteinsAmount": 1.685,
+      "carbohydratesAmount": 25.28,
+      "energyAmount": 123.63,
+      "fatFullAmount": 0.834,
+      "proteinsFullAmount": 0.8425,
+      "carbohydratesFullAmount": 12.64,
+      "energyFullAmount": 61.815,
+      "weight": 0.05,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": null,
+      "order": 9,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "e4f6c647-b23f-4869-ab24-ade4e96a1a46",
+      "code": "00745",
+      "name": "- Соус для Гой Куон",
+      "description": "",
+      "additionalInfo": null,
+      "tags": [],
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 54.0,
+      "proteinsAmount": 72.0,
+      "carbohydratesAmount": 12.0,
+      "energyAmount": 774.0,
+      "fatFullAmount": 21.6,
+      "proteinsFullAmount": 28.8,
+      "carbohydratesFullAmount": 4.8,
+      "energyFullAmount": 309.6,
+      "weight": 0.04,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "e66c42d8-3726-4969-bb88-1df21faabf8a",
+      "code": "00923",
+      "name": "- Говядина отв.",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 0.1,
+      "proteinsAmount": 0.9,
+      "carbohydratesAmount": 3.0,
+      "energyAmount": 16.5,
+      "fatFullAmount": 0.011,
+      "proteinsFullAmount": 0.099,
+      "carbohydratesFullAmount": 0.33,
+      "energyFullAmount": 1.815,
+      "weight": 0.011,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "ba6aa1fe-1fe2-44d0-8211-040c4ccd4ed4",
+      "code": "00926",
+      "name": "- Лайм долька",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 0.2,
+      "proteinsAmount": 2.0,
+      "carbohydratesAmount": 9.5,
+      "energyAmount": 40.0,
+      "fatFullAmount": 0.004,
+      "proteinsFullAmount": 0.04,
+      "carbohydratesFullAmount": 0.19,
+      "energyFullAmount": 0.8,
+      "weight": 0.002,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "70f46b0c-f1f2-40ed-907f-4fa2698759bc",
+      "code": "00925",
+      "name": "- Перец острый вьет.",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 6.7,
+      "proteinsAmount": 13.1,
+      "carbohydratesAmount": 9.6,
+      "energyAmount": 141.0,
+      "fatFullAmount": 3.015,
+      "proteinsFullAmount": 5.895,
+      "carbohydratesFullAmount": 4.32,
+      "energyFullAmount": 63.45,
+      "weight": 0.045,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "edc4be75-579a-4f7e-8b4f-7341e118f087",
+      "code": "00924",
+      "name": "- Проростки бобов",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 45.6,
+      "proteinsAmount": 9.2,
+      "carbohydratesAmount": 19.9,
+      "energyAmount": 544.0,
+      "fatFullAmount": 3.648,
+      "proteinsFullAmount": 0.736,
+      "carbohydratesFullAmount": 1.592,
+      "energyFullAmount": 43.52,
+      "weight": 0.008,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "5ec252a9-7d40-4d51-835a-053348aef961",
+      "code": "00743",
+      "name": "- Соус Лаогама",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 0.0,
+      "proteinsAmount": 0.0,
+      "carbohydratesAmount": 20.0,
+      "energyAmount": 80.0,
+      "fatFullAmount": 0.0,
+      "proteinsFullAmount": 0.0,
+      "carbohydratesFullAmount": 2.0,
+      "energyFullAmount": 8.0,
+      "weight": 0.01,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "cacc77b6-db1b-450a-b972-7e70d2254af8",
+      "code": "00742",
+      "name": "- Соус Шрирачи",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 13.8,
+      "proteinsAmount": 65.7,
+      "carbohydratesAmount": 0.0,
+      "energyAmount": 405.0,
+      "fatFullAmount": 3.726,
+      "proteinsFullAmount": 17.739,
+      "carbohydratesFullAmount": 0.0,
+      "energyFullAmount": 109.35,
+      "weight": 0.027,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "6e5392b6-cf9f-481f-92fd-5b2f5a529b5a",
+      "code": "00922",
+      "name": "- Оковалок охл.",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 0.03,
+      "proteinsAmount": 0.385,
+      "carbohydratesAmount": 4.55,
+      "energyAmount": 38.0,
+      "fatFullAmount": 0.006,
+      "proteinsFullAmount": 0.077,
+      "carbohydratesFullAmount": 0.91,
+      "energyFullAmount": 7.6,
+      "weight": 0.02,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "5ed6e511-a3e8-4b8c-9bb2-41893cd5454d",
+      "code": "00741",
+      "name": "- Уксус для ФО",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 1.1,
+      "proteinsAmount": 10.4,
+      "carbohydratesAmount": 69.7,
+      "energyAmount": 330.3,
+      "fatFullAmount": 2.75,
+      "proteinsFullAmount": 26.0,
+      "carbohydratesFullAmount": 174.25,
+      "energyFullAmount": 825.75,
+      "weight": 0.25,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "c8b75e12-5a1d-41c5-901c-71468f4c2664",
+      "code": "01429",
+      "name": "- Лапша Фо (250 г)",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 13.8,
+      "proteinsAmount": 65.7,
+      "carbohydratesAmount": 0.0,
+      "energyAmount": 405.0,
+      "fatFullAmount": 5.52,
+      "proteinsFullAmount": 26.28,
+      "carbohydratesFullAmount": 0.0,
+      "energyFullAmount": 162.0,
+      "weight": 0.04,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "363d0b12-4079-4787-9119-5d6c8ae01c9c",
+      "code": "01430",
+      "name": "- Курица отв.",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 1.1,
+      "proteinsAmount": 10.4,
+      "carbohydratesAmount": 69.7,
+      "energyAmount": 330.3,
+      "fatFullAmount": 2.75,
+      "proteinsFullAmount": 26.0,
+      "carbohydratesFullAmount": 174.25,
+      "energyFullAmount": 825.75,
+      "weight": 0.25,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "57a4ff77-5a72-45f1-9d4c-870c5db213fb",
+      "code": "01108",
+      "name": "- Лапша Бун (250 г)",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 0.03,
+      "proteinsAmount": 0.89,
+      "carbohydratesAmount": 10.06,
+      "energyAmount": 46.27,
+      "fatFullAmount": 0.012,
+      "proteinsFullAmount": 0.356,
+      "carbohydratesFullAmount": 4.024,
+      "energyFullAmount": 18.508,
+      "weight": 0.04,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "aa10639c-11fe-4fa4-aa06-548d4cac4b95",
+      "code": "00744",
+      "name": "- Соус для Нэм",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 1.668,
+      "proteinsAmount": 1.685,
+      "carbohydratesAmount": 25.28,
+      "energyAmount": 123.63,
+      "fatFullAmount": 0.834,
+      "proteinsFullAmount": 0.8425,
+      "carbohydratesFullAmount": 12.64,
+      "energyFullAmount": 61.815,
+      "weight": 0.05,
+      "groupId": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "productCategoryId": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "порц",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "1172d95a-61eb-4d1f-92a4-4ae81a07ae73",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "e4f6c647-b23f-4869-ab24-ade4e96a1a46",
+      "code": "00745",
+      "name": "- Соус для Гой Куон",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 0.0,
+      "proteinsAmount": 0.0,
+      "carbohydratesAmount": 0.0,
+      "energyAmount": 0.0,
+      "fatFullAmount": 0.0,
+      "proteinsFullAmount": 0.0,
+      "carbohydratesFullAmount": 0.0,
+      "energyFullAmount": 0.0,
+      "weight": 0.1,
+      "groupId": "2ea8c770-3065-4d40-b5e8-8bf642f5c9ef",
+      "productCategoryId": "eb4cace0-d26f-4a1d-0177-72a36203e0d4",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "шт",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "2ea8c770-3065-4d40-b5e8-8bf642f5c9ef",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "fb216a6c-8b9d-457b-b755-a73571f49ee1",
+      "code": "01177",
+      "name": "Без льда (в)",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    },
+    {
+      "fatAmount": 0.0,
+      "proteinsAmount": 0.0,
+      "carbohydratesAmount": 0.0,
+      "energyAmount": 0.0,
+      "fatFullAmount": 0.0,
+      "proteinsFullAmount": 0.0,
+      "carbohydratesFullAmount": 0.0,
+      "energyFullAmount": 0.0,
+      "weight": 0.0,
+      "groupId": "2ea8c770-3065-4d40-b5e8-8bf642f5c9ef",
+      "productCategoryId": "eb4cace0-d26f-4a1d-0177-72a36203e0d4",
+      "type": "Modifier",
+      "orderItemType": "Product",
+      "modifierSchemaId": null,
+      "modifierSchemaName": null,
+      "splittable": false,
+      "measureUnit": "шт",
+      "sizePrices": [
+        {
+          "sizeId": null,
+          "price": {
+            "currentPrice": 1.0,
+            "isIncludedInMenu": true,
+            "nextPrice": null,
+            "nextIncludedInMenu": false,
+            "nextDatePrice": null
+          }
+        }
+      ],
+      "modifiers": [],
+      "groupModifiers": [],
+      "imageLinks": [],
+      "doNotPrintInCheque": false,
+      "parentGroup": "2ea8c770-3065-4d40-b5e8-8bf642f5c9ef",
+      "order": 0,
+      "fullNameEnglish": "",
+      "useBalanceForSell": false,
+      "canSetOpenPrice": false,
+      "paymentSubject": "ТОВАР",
+      "id": "3e91a52e-c483-4836-b6dc-dad2112682cc",
+      "code": "01175",
+      "name": "Со льдом (в)",
+      "description": "",
+      "additionalInfo": null,
+      "tags": null,
+      "isDeleted": false,
+      "seoDescription": null,
+      "seoText": null,
+      "seoKeywords": null,
+      "seoTitle": null
+    }
+  ],
+  "sizes": [],
+  "revision": 1765323564329
+}

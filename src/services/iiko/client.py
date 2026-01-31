@@ -136,5 +136,18 @@ class IikoClient:
         resp.raise_for_status()
         return resp.json().get("terminalGroupStopLists", [])
 
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    async def get_tech_cards(self, organization_id: str) -> List[Dict[str, Any]]:
+        """Get technical cards (recipes)"""
+        if not self.token:
+            await self.auth()
+            
+        url = f"{self.base_url}/techcards"
+        payload = {"organizationId": organization_id}
+        
+        resp = await self.client.post(url, json=payload, headers=self._auth_header())
+        resp.raise_for_status()
+        return resp.json().get("technicalCards", [])
+
     async def close(self):
         await self.client.aclose()
