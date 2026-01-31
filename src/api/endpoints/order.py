@@ -11,20 +11,18 @@ from src.schemas.order import OrderResponse, OrderConfirmRequest
 
 router = APIRouter()
 
+from src.services.order_service import OrderService
+
 @router.get("/latest", response_model=OrderResponse)
 async def get_latest_order(restaurant_id: UUID, db: AsyncSession = Depends(get_db)):
     """
-    Get the latest order for a restaurant (DRAFT preferable, else any latest).
+    Get the latest draft order for a restaurant.
     """
-    stmt = select(Order).where(
-        Order.restaurant_id == restaurant_id
-    ).order_by(desc(Order.created_at)).limit(1)
-    
-    result = await db.execute(stmt)
-    order = result.scalar_one_or_none()
+    service = OrderService(db)
+    order = await service.get_latest_draft_order(restaurant_id)
     
     if not order:
-        raise HTTPException(status_code=404, detail="No orders found")
+        raise HTTPException(status_code=404, detail="No draft orders found")
     
     return order
 
@@ -33,16 +31,5 @@ async def confirm_order(order_id: UUID, db: AsyncSession = Depends(get_db)):
     """
     Confirm an order (change status to VERIFIED_BY_COOK).
     """
-    order = await db.get(Order, order_id)
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-        
-    if order.status != OrderStatus.DRAFT:
-        # Allow re-confirming? Or error?
-        # For now logic allows transitioning from Draft.
-        pass
-        
-    order.status = OrderStatus.VERIFIED_BY_COOK
-    await db.commit()
-    await db.refresh(order)
-    return order
+    service = OrderService(db)
+    return await service.confirm_order(order_id)
