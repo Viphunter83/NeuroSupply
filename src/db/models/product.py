@@ -14,6 +14,8 @@ class Product(Base):
     name_ru: Mapped[str] = mapped_column(String, nullable=False)
     name_vn: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     unit: Mapped[str] = mapped_column(String, nullable=False)
+    package_size: Mapped[Optional[float]] = mapped_column(Numeric(10, 4), nullable=True) # e.g. 0.4 (kg) or 24 (pcs)
+    package_unit: Mapped[Optional[str]] = mapped_column(String, nullable=True) # e.g. "kg", "box"
     shelf_life_days: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     category: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 

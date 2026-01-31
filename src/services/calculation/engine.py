@@ -1,198 +1,84 @@
 
-import logging
-from typing import Dict, List, Optional
-from datetime import date, timedelta
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from collections import defaultdict
 import math
-import uuid
-import json
-
-from src.services.iiko.client import IikoClient
-from src.db.models import Product, SalesPlan, Order, OrderStatus, TechCard, StockBalance
-from src.core.config import settings
-from src.services.calculation.mock_sales import generate_mock_sales
+import logging
+from typing import Dict, List, Any
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+from src.db.models.product import Product, TechCard
 
 logger = logging.getLogger(__name__)
 
 class CalculationEngine:
-    def __init__(self, iiko_client: IikoClient, db: AsyncSession):
-        self.iiko = iiko_client
-        self.db = db
-        self.buffer_coeff = 1.2
-        self.food_cost_avg = 0.3 
+    def __init__(self, session: Session):
+        self.session = session
 
-    async def calculate_order(self, org_id: str) -> List[Dict]:
+    async def calculate_requirements(self, sales_plan: Dict[str, int]) -> List[Dict[str, Any]]:
         """
-        Main calculation logic V2 (Persisted & Mock supported).
+        Calculates ingredient requirements based on Sales Plan (Dish ID -> Qty).
+        Returns list of ingredients with 'required_amount' and 'order_amount' (packages).
         """
-        logger.info(f"Starting calculation for Org: {org_id}")
-        
-        today = date.today()
-        tomorrow = today + timedelta(days=1)
-        day_after = today + timedelta(days=2)
-        
-        # 1. Get Demand Forecast (Sales Plan Money)
-        plans = await self._get_sales_plans([tomorrow, day_after])
-        total_plan_money = sum(float(p.amount_rub) for p in plans)
-        
-        logger.info(f"Sales Plan for next 2 days: {total_plan_money} RUB")
-        
-        if total_plan_money == 0:
-            logger.warning("No sales plan found. Using default fallback 100k.")
-            total_plan_money = 100000.0
+        requirements = {} # product_id -> {product: Obj, total_gross: float}
 
-        # 2. Historical Consumption (Last 7 Days)
-        sales_data = []
-        if settings.USE_MOCK_DATA:
-            logger.info("Using MOCK SALES DATA.")
-            # Generate 7 days mock data
-            for i in range(7):
-                d = today - timedelta(days=i+1)
-                daily = await generate_mock_sales(self.db, d, org_id)
-                sales_data.extend(daily)
-        else:
-            date_from = (today - timedelta(days=7)).strftime("%Y-%m-%d")
-            date_to = (today - timedelta(days=1)).strftime("%Y-%m-%d")
-            logger.info(f"Fetching sales from {date_from} to {date_to}")
-            sales_data = await self.iiko.get_sales_olap(org_id, date_from, date_to)
-
-        # 3. Calculate Consumption Config (Money -> KG) using TechCards?
-        # In V2 Mock, we bypass TechCards if we don't have them seeded.
-        # Assume Direct Usage: Item Sold = Product Used.
-        
-        # Fetch DB Products (Key = iiko_id for matching, Value = Product)
-        # But wait, sales_data contains 'DishName' (Mock) or 'DishName' (Real).
-        # We match by NAME as Mock generator uses Names.
-        
-        all_products = await self._get_all_products() # Dict[iiko_id, Product]
-        # Build Name Map
-        product_map_by_name = {p.name_ru.lower().strip(): p for p in all_products.values()}
-        
-        # Calculate Total Sales Money
-        total_sales_7days = sum(float(item.get('DishDiscountSumInt', 0)) for item in sales_data)
-        
-        # Calculate Usage KG
-        product_usage_kg = defaultdict(float) # DB Product ID -> KG
-        
-        # If we had tech cards, we would map Dish -> TC -> Product.
-        # Since we only seeded Products and not TechCards fully (or at all), 
-        # we assume Direct Usage logic for now.
-        
-        for item in sales_data:
-            name = item.get('DishName', '').strip().lower()
-            qty = float(item.get('DishAmountInt', 0))
+        # 1. Iterate Sales Plan
+        for dish_id, plan_qty in sales_plan.items():
+            # Get Tech Cards for this dish
+            stmt = select(TechCard).where(TechCard.iiko_dish_id == dish_id)
+            result = await self.session.execute(stmt)
+            tech_cards = result.scalars().all()
             
-            if name in product_map_by_name:
-                product = product_map_by_name[name]
-                # Assuming 1 unit of Product per Dish
-                product_usage_kg[product.id] += qty
-
-        # Predict Consumption
-        predicted_consumption = {} # DB Product ID -> Kg
-        
-        if total_sales_7days > 0:
-             factor = total_plan_money / total_sales_7days
-             for pid, usage_7d in product_usage_kg.items():
-                 # Simple linear projection
-                 predicted_consumption[pid] = (usage_7d / total_sales_7days) * total_plan_money
-        else:
-            # Fallback if no history?
-            logger.warning("No history found. Prediction is 0.")
-
-        # 4. Get Current Stock
-        current_stocks = {}
-        # Fetch from DB StockBalance? Or Iiko?
-        # Requirement: "1. Получает StockBalance из БД (последний снапшот)."
-        # So we query DB.
-        
-        stmt = select(StockBalance).where(StockBalance.restaurant_id == uuid.UUID(str(org_id)))
-        result = await self.db.execute(stmt)
-        stocks_db = result.scalars().all()
-        # Map product_id -> amount
-        # Handle duplicates/snapshots? Take latest?
-        # Model has snapshot_at.
-        # Ideally query Latest per product.
-        # For MVP, assume one entry per product or just sum?
-        # Let's assume seeded/latest.
-        for s in stocks_db:
-             current_stocks[s.product_id] = float(s.amount)
-
-        # 5. Pending Orders
-        pending_orders = {} # Placeholder
-
-        # 6. Final Order
-        recommendations = []
-        order_items = []
-        
-        # Map DB ID -> Product Object
-        db_id_to_product = {p.id: p for p in all_products.values()}
-
-        for pid, predicted_kg in predicted_consumption.items():
-            stock = current_stocks.get(pid, 0)
-            pending = pending_orders.get(pid, 0)
-            
-            required = (predicted_kg * self.buffer_coeff) - (stock + pending)
-            
-            if required > 0:
-                product = db_id_to_product.get(pid)
-                if not product:
-                    continue
+            if not tech_cards:
+                logger.warning(f"No recipe found for Dish ID {dish_id}")
+                continue
                 
-                final_qty = required
-                if product.unit in ['шт', 'pcs', 'порция']:
-                    final_qty = math.ceil(required)
-                else:
-                    final_qty = round(required, 3)
+            for tc in tech_cards:
+                ing_id = tc.product_id
+                gross = float(tc.gross_amount)
+                total_needed = gross * plan_qty
                 
-                item_data = {
-                    "product_id": str(pid),
-                    "product_name": product.name_ru,
-                    "unit": product.unit,
-                    "quantity": final_qty,
-                    "predicted_usage": round(predicted_kg, 3),
-                    "stock": stock
-                }
-                recommendations.append(item_data)
-                order_items.append(item_data)
+                if ing_id not in requirements:
+                    # Get Ingredient info (lazy load or eager load earlier)
+                    ing_stmt = select(Product).where(Product.id == ing_id)
+                    ing_res = await self.session.execute(ing_stmt)
+                    ingredient = ing_res.scalar_one_or_none()
+                    
+                    if ingredient:
+                        requirements[ing_id] = {
+                            "product": ingredient,
+                            "total_gross": 0.0
+                        }
+                
+                if ing_id in requirements:
+                    requirements[ing_id]["total_gross"] += total_needed
 
-        # 7. Persist DRAFT Order
-        new_order_id = None
-        if order_items:
-            new_order = Order(
-                id=uuid.uuid4(),
-                restaurant_id=uuid.UUID(str(org_id)),
-                status=OrderStatus.DRAFT,
-                items=order_items
-            )
-            self.db.add(new_order)
-            await self.db.commit()
-            new_order_id = str(new_order.id)
-            logger.info(f"Created DRAFT Order: {new_order_id} with {len(order_items)} items.")
+        # 2. Rounding Logic (Order Generation)
+        order_list = []
+        for ing_id, data in requirements.items():
+            product = data["product"]
+            total_gross = data["total_gross"]
+            pkg_size = float(product.package_size) if product.package_size else None
+            
+            order_qty = 0
+            comment = ""
+            
+            if pkg_size and pkg_size > 0:
+                # Round Up to nearest package
+                packages_needed = math.ceil(total_gross / pkg_size)
+                order_qty = packages_needed
+                order_amount_kg = packages_needed * pkg_size
+                comment = f"Need {total_gross:.3f} {product.unit} -> {packages_needed} x {pkg_size} {product.package_unit}"
+            else:
+                # Fallback if no package size: just order exact amount (or treat as 'pcs')
+                order_qty = math.ceil(total_gross)
+                comment = f"Need {total_gross:.3f} {product.unit} (No Pkg info)"
 
-        # Return format expected by Bot or API
-        # Bot expects list of dicts.
-        # But requirement said "Возвращает order_id".
-        # Let's return both or attach ID to list?
-        # For backward compatibility with Bot, return recommendations list.
-        # But we should likely return object.
-        # I'll return list for now, and handle ID in logs or via API.
-        # Actually I can append ID to the first item meta? Hacky.
-        # Let's return list as expected by `handlers.py`.
-        
-        return sorted(recommendations, key=lambda x: x['product_name'])
-
-    async def _get_sales_plans(self, dates: List[date]) -> List[SalesPlan]:
-         query = select(SalesPlan).where(SalesPlan.date.in_(dates))
-         result = await self.db.execute(query)
-         return result.scalars().all()
-
-    async def _get_all_tech_cards(self) -> List[TechCard]:
-        result = await self.db.execute(select(TechCard))
-        return result.scalars().all()
-
-    async def _get_all_products(self) -> Dict[str, Product]:
-        result = await self.db.execute(select(Product))
-        # Return Dict[iiko_id, Product]
-        return {p.iiko_id: p for p in result.scalars().all()}
+            order_list.append({
+                "ingredient_name": product.name_ru,
+                "required_amount": total_gross,
+                "unit": product.unit,
+                "package_size": pkg_size,
+                "order_qty": order_qty,
+                "order_unit": product.package_unit or "шт",
+                "comment": comment
+            })
+            
+        return order_list
