@@ -96,7 +96,7 @@ class IikoClient:
             return resp.json()
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 401:
-                logger.warning("Token expired or invalid. Clearing token.")
+                logger.warning(f"Token expired or invalid: {e.response.text}")
                 self.token = None
             raise e
 
@@ -109,6 +109,32 @@ class IikoClient:
         # Placeholder as endpoint depends on exact business license/modules
         logger.warning(f"get_stock_balances not fully implemented (endpoint uncertain). Returning empty.")
         return []
+
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    async def get_terminal_groups(self, organization_ids: List[str]) -> List[Dict[str, Any]]:
+        """Get terminal groups for organizations"""
+        if not self.token:
+            await self.auth()
+            
+        url = f"{self.base_url}/terminal_groups"
+        payload = {"organizationIds": organization_ids}
+        
+        resp = await self.client.post(url, json=payload, headers=self._auth_header())
+        resp.raise_for_status()
+        return resp.json().get("terminalGroups", [])
+
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    async def get_stop_lists(self, organization_ids: List[str]) -> List[Dict[str, Any]]:
+        """Get out-of-stock items (Stop List)"""
+        if not self.token:
+            await self.auth()
+            
+        url = f"{self.base_url}/stop_lists"
+        payload = {"organizationIds": organization_ids}
+        
+        resp = await self.client.post(url, json=payload, headers=self._auth_header())
+        resp.raise_for_status()
+        return resp.json().get("terminalGroupStopLists", [])
 
     async def close(self):
         await self.client.aclose()

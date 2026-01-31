@@ -1,0 +1,48 @@
+INFO:__main__:Connecting with API Key: c65f6...
+INFO:httpx:HTTP Request: POST https://api-ru.iiko.services/api/1/access_token "HTTP/1.1 200 OK"
+INFO:src.services.iiko.client:Successfully authenticated with iiko
+INFO:httpx:HTTP Request: POST https://api-ru.iiko.services/api/1/organizations "HTTP/1.1 200 OK"
+INFO:__main__:Found 43 organizations:
+INFO:__main__:ID: 02c450f6-9740-43de-80fd-54ea2a20f008, Name: FEST
+INFO:__main__:ID: 0c1c4c57-89cc-4044-bc9a-a3611e840260, Name: TPL
+INFO:__main__:ID: 1495ad6c-bc7e-4a18-95c9-563db20fb42e, Name: BRT
+INFO:__main__:ID: 1e599399-4a74-4ca7-beb5-e48a5a5515ec, Name: PBRK
+INFO:__main__:ID: 1e9842de-b81c-450b-a020-12cd9d012d54, Name: MOS
+INFO:__main__:ID: 37a6cee1-ab33-48da-b461-292ca943279f, Name: HWD
+INFO:__main__:ID: 3ae104bd-10a4-4100-938c-b5237eac26af, Name: FK PITER
+INFO:__main__:ID: 3b5ba63d-88f2-4174-9c76-1bbc1c2d8e59, Name: DEMO
+INFO:__main__:ID: 3f919c37-5f93-4c20-8748-e41c411eeb34, Name: DK
+INFO:__main__:ID: 460b64c3-f6a7-41a0-abe5-ea95d306f494, Name: BLCH
+INFO:__main__:ID: 4806c799-1215-4fe0-a3c4-fb0bbb8da0d2, Name: YUZ
+INFO:__main__:ID: 68d9d320-9e3a-4ded-bbaf-4ca96c5105ea, Name: PG
+INFO:__main__:ID: 71495977-8ab7-4bbd-8bbe-b613b52634b7, Name: BGR
+INFO:__main__:ID: 717a4228-0e58-41cb-9469-add8694e1a95, Name: ZLG
+INFO:__main__:ID: 761b2f87-5688-4f78-8962-f6f823af3d1a, Name: ANG
+INFO:__main__:ID: 7a416cbc-c318-4aaf-be58-4398e58a4b0d, Name: ARTL
+INFO:__main__:ID: 7ae08cea-95e9-4136-a746-ed0fe8077770, Name: DNL
+INFO:__main__:ID: 7b90ddb7-69cd-4412-863e-04bb8620cb3d, Name: EKT
+INFO:__main__:ID: 7ed864a1-aa78-40dc-a9a1-585df1dfb2ca, Name: VDNH
+INFO:__main__:ID: 7fcbe7a6-f89d-42b2-a8db-55acd04a7612, Name: EUR
+INFO:__main__:ID: 82ae97a0-15bd-4010-a146-384cad20cd8c, Name: GLR
+INFO:__main__:ID: 8a1d95ff-d1d5-4081-b740-5170deb8efb0, Name: SMR
+INFO:__main__:ID: 8a53c1a4-e87d-45a6-8ebc-d9e0b7d5e8ae, Name: VO
+INFO:__main__:ID: 8e38b428-7ea7-4adc-be8c-aa7cbb674ddb, Name: GP
+INFO:__main__:ID: a02fb744-0f3c-4732-910c-c32c4a5eeb08, Name: 5С
+INFO:__main__:ID: a2eb05ff-17c8-4f3b-8773-a7ba4dd28e5b, Name: VKZ
+INFO:__main__:ID: a32c2d16-2c84-4e8a-87e4-7335416af0ef, Name: DP2
+INFO:__main__:ID: a78df033-52c3-4be5-946e-8c9f6c85dcd7, Name: TSDM
+INFO:__main__:ID: a8e5f52a-05e7-49aa-8a80-23c03f1b99ba, Name: STR
+INFO:__main__:ID: aa5dca84-9a94-4763-a31f-8b942e419a1a, Name: ODI
+INFO:__main__:ID: b9fd57d6-1c9f-4cb7-b5f0-175aaa82d0a2, Name: MDM
+INFO:__main__:ID: c12964e9-626b-499b-81d9-7b32e4be2138, Name: Тест
+INFO:__main__:ID: c4bcec90-ac1a-4d1b-9798-758f60d4be2d, Name: SVL
+INFO:__main__:ID: c515c010-93d4-4c63-bddb-5abfad451af3, Name: SKLAD
+INFO:__main__:ID: c5d37989-50d5-478d-973f-165b28b990f0, Name: NRG
+INFO:__main__:ID: cf3e9fc4-3647-472e-907e-3d76d5313fac, Name: GUAVA
+INFO:__main__:ID: d4df5990-72ad-49e7-afd8-22672928c201, Name: KZN
+INFO:__main__:ID: e0ee05dc-38ba-4582-875b-d93e3eb092e3, Name: AVE
+INFO:__main__:ID: ec8e8755-7b92-4a93-85d8-a2c66098adba, Name: Fest25
+INFO:__main__:ID: ee435db0-a5e0-4973-927d-a999ab9c1ee7, Name: MRK
+INFO:__main__:ID: f6b31cbf-a4cc-4e2e-9271-12aa4d0653f2, Name: AVP
+INFO:__main__:ID: fb913fdb-937d-4f7b-94b0-95e58e3a6f97, Name: DP
+INFO:__main__:ID: fea563ee-6c61-4893-a038-5715fee1958a, Name: FK

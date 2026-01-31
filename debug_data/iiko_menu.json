@@ -1,0 +1,319 @@
+{
+  "correlationId": "b0feb9f9-22e5-4563-ac16-b7538c2a5d0b",
+  "groups": [],
+  "productCategories": [
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd47eb5a",
+      "name": "Фрукты",
+      "isDeleted": false
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72a362037f87",
+      "name": "01 ",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd47eb9a",
+      "name": "Товары поставщики",
+      "isDeleted": true
+    },
+    {
+      "id": "c296bc09-4552-e84e-0163-b804a92bae47",
+      "name": "05 Пиво",
+      "isDeleted": false
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd470d7c",
+      "name": "Хозтовары",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2e16",
+      "name": "05 Пиво с собой",
+      "isDeleted": false
+    },
+    {
+      "id": "0a36c923-634e-5447-0180-dbf6e3432350",
+      "name": "12 Акции",
+      "isDeleted": false
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-4a0484c617f4",
+      "name": "Списание",
+      "isDeleted": false
+    },
+    {
+      "id": "9180415c-adb9-0f78-016e-930eade83a9c",
+      "name": "02 Шейки",
+      "isDeleted": false
+    },
+    {
+      "id": "974e9f89-cd66-3fd5-016b-4bbe824fdc45",
+      "name": "04 Миксы",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd47eb4f",
+      "name": "Товары Ламара",
+      "isDeleted": true
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-46de1b1fbc3b",
+      "name": "Тайгета",
+      "isDeleted": false
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-46de1b1fc1e8",
+      "name": "Прочие медикаменты",
+      "isDeleted": false
+    },
+    {
+      "id": "fc00b42f-ba4d-e49c-0169-3a0a88c82a6d",
+      "name": "06 Напитки",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2e06",
+      "name": "04 Миксы с собой",
+      "isDeleted": true
+    },
+    {
+      "id": "266c3673-32e6-4fc3-0166-c603b0fbca1c",
+      "name": "Овощи",
+      "isDeleted": false
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd470d81",
+      "name": "Посуда",
+      "isDeleted": false
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72a36203c1fa",
+      "name": "09 Доставка курьером",
+      "isDeleted": false
+    },
+    {
+      "id": "bc43a789-a477-4970-016d-de8cca28a01b",
+      "name": "Специи",
+      "isDeleted": false
+    },
+    {
+      "id": "f384b925-7c93-fb9e-0175-54ccad24adee",
+      "name": "Форменная одежда",
+      "isDeleted": false
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-b0067edd0505",
+      "name": "Заготовки ночные",
+      "isDeleted": true
+    },
+    {
+      "id": "36af53c7-b113-2d8d-0190-78d4ed0d1086",
+      "name": "Однораз. посуда для списаний",
+      "isDeleted": false
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72ef2c1c0dd4",
+      "name": "07 Товар (шт) доставка",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2d26",
+      "name": "01 Блюда с собой",
+      "isDeleted": false
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-b0067edd0506",
+      "name": "Товары Вьет",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd470d82",
+      "name": "Другое",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-b0067edd0504",
+      "name": "Товары одноразовое",
+      "isDeleted": true
+    },
+    {
+      "id": "9180415c-adb9-0f78-016e-92d9c48cbfe8",
+      "name": "07 Товар (шт)",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2e19",
+      "name": "06 Напитки доставка",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2de0",
+      "name": "Вьетфрукты с собой",
+      "isDeleted": true
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72a36203e0d4",
+      "name": "11 Модификаторы",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2e03",
+      "name": "03 Вьетфрукты с собой",
+      "isDeleted": true
+    },
+    {
+      "id": "9180415c-adb9-0f78-016e-930eade8444d",
+      "name": "10 Меню персонала",
+      "isDeleted": false
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-46de1b1fbda3",
+      "name": "Перчатки",
+      "isDeleted": false
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-6844a757409e",
+      "name": "Антисептики",
+      "isDeleted": true
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72ef2c1c07ae",
+      "name": "01 Блюда доставка",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b40c1",
+      "name": "07 Товар (шт) с собой",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2d63",
+      "name": "02 Шейки с собой",
+      "isDeleted": false
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72ef2c1c3bc2",
+      "name": "Прочие категории",
+      "isDeleted": false
+    },
+    {
+      "id": "fc00b42f-ba4d-e49c-0168-b95251bf5113",
+      "name": "Блюда 2",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd47eb5c",
+      "name": "Товары Даниловский",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-b0067edd0503",
+      "name": "Канцтовары",
+      "isDeleted": true
+    },
+    {
+      "id": "f384b925-7c93-fb9e-0175-5a93a2ff26a7",
+      "name": "Порча не фрукты",
+      "isDeleted": false
+    },
+    {
+      "id": "f384b925-7c93-fb9e-0175-5a93a2ff401a",
+      "name": "Мясные и рыбные продукты",
+      "isDeleted": false
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd47eb59",
+      "name": "Товары Камал",
+      "isDeleted": true
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-46de1b1fbc24",
+      "name": "Канцелярия",
+      "isDeleted": false
+    },
+    {
+      "id": "e435ab8b-3dff-d40d-0174-46de1b1fc1eb",
+      "name": "Маски",
+      "isDeleted": false
+    },
+    {
+      "id": "c296bc09-4552-e84e-0163-b804a92bb123",
+      "name": "Однораз посуда",
+      "isDeleted": false
+    },
+    {
+      "id": "fc00b42f-ba4d-e49c-0168-b95251bf5118",
+      "name": "Блюдо 2",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd47eb5b",
+      "name": "Товары одноразовое",
+      "isDeleted": true
+    },
+    {
+      "id": "9180415c-adb9-0f78-016e-92d9c48cb77a",
+      "name": "08 Допы",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-e25e0f5b2e1b",
+      "name": "06 Напитки с собой",
+      "isDeleted": false
+    },
+    {
+      "id": "eb4cace0-d26f-4a1d-0177-72ef2c1c0dd3",
+      "name": "02 Шейки доставка",
+      "isDeleted": false
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd470cf8",
+      "name": "Заготовки утренние",
+      "isDeleted": true
+    },
+    {
+      "id": "ffc132cb-5767-c15c-0151-c42efd470d7b",
+      "name": "01 Блюда",
+      "isDeleted": false
+    },
+    {
+      "id": "363a8a6c-76d1-5cb2-018a-dc77358002dd",
+      "name": "Скидка",
+      "isDeleted": false
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-d23b48a785a3",
+      "name": "04 Миксы доставка",
+      "isDeleted": true
+    },
+    {
+      "id": "3ef73021-c01a-9280-017d-d23b48a7bca8",
+      "name": "03 Вьетфрукты доставка",
+      "isDeleted": true
+    },
+    {
+      "id": "bc43a789-a477-4970-016d-de8cca289cc3",
+      "name": "03 Вьетфрукты",
+      "isDeleted": true
+    },
+    {
+      "id": "5e0e479f-ef81-9bfb-0196-588a261a5b6c",
+      "name": "13 Доставка Дан",
+      "isDeleted": false
+    },
+    {
+      "id": "75c13808-de2c-7625-019b-21e55136b4ed",
+      "name": "Кондименты",
+      "isDeleted": false
+    },
+    {
+      "id": "0597b213-19d2-fe45-019b-e4a196b9b332",
+      "name": "14 Ланчи",
+      "isDeleted": false
+    }
+  ],
+  "products": [],
+  "sizes": [],
+  "revision": 1640599919819
+}
