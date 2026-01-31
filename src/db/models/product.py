@@ -1,6 +1,7 @@
 import uuid
 from typing import Optional
-from sqlalchemy import String, Integer, ForeignKey, Numeric
+from datetime import datetime
+from sqlalchemy import String, Integer, ForeignKey, Numeric, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from .base import Base
@@ -36,9 +37,6 @@ class StockBalance(Base):
     restaurant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurants.id"), nullable=False)
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False)
     amount: Mapped[float] = mapped_column(Numeric(10, 4), nullable=False)
-    from datetime import datetime
-    from sqlalchemy import DateTime
-
     snapshot_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     
     # Fixing type error in thought process: TDD said Timestamp, I put UUID here by mistake.

@@ -62,6 +62,7 @@ class IikoClient:
             await self.auth()
             
         url = f"{self.base_url}/nomenclature"
+        # Fixed: Usage of json body instead of params
         payload = {"organizationId": organization_id}
         
         resp = await self.client.post(url, json=payload, headers=self._auth_header())
@@ -79,7 +80,6 @@ class IikoClient:
             
         url = f"{self.base_url}/sales/olap"
         
-        # Updated aggregation fields for CalculationEngine V1
         payload = {
             "organizationIds": [organization_id],
             "reportType": "SALES",
@@ -87,7 +87,7 @@ class IikoClient:
             "dateTo": date_to,
             "groupByColFields": ["DishName"],
             "groupByRowFields": ["OpenDate.Typed"],
-            "aggregateFields": ["DishAmountInt", "DishDiscountSumInt"] # Amount (Qty) and Sum (Revenue)
+            "aggregateFields": ["DishAmountInt", "DishDiscountSumInt"]
         }
         
         try:
@@ -106,29 +106,7 @@ class IikoClient:
         if not self.token:
             await self.auth()
         
-        # Attempting to use specific endpoint for balance.
-        # If unavailable, CalculationEngine handles empty list.
-        # Try /api/1/report/olap with STOCK type? Or /api/1/accounting/store/balance?
-        
-        # Note: Without precise docs, I will use a placeholder that matches expected return type
-        # for CalculationEngine (List of dicts with 'productId' and 'amount').
-        # Using a probable endpoint.
-        
-        # Actually better to rely on known structure or mock if untested.
-        # But let's try calling 'nomenclature' to get stock? No.
-        
-        # Let's try to get stores first? 
-        # For V1, I will return [] and log warning if I can't confirm endpoint.
-        # But I must provide the method.
-        
-        # Hypothetical endpoint:
-        # url = f"{self.base_url}/storages/groups"
-        # Then iterate groups...
-        
-        # Let's return empty list for now to allow code to run, 
-        # as getting stock is 100% dependent on correct endpoint which I can't grep without docs.
-        # Engine will assume 0 stock -> Safety Stock calculation works (safely orders more).
-        
+        # Placeholder as endpoint depends on exact business license/modules
         logger.warning(f"get_stock_balances not fully implemented (endpoint uncertain). Returning empty.")
         return []
 

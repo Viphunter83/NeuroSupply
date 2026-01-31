@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     BOT_TOKEN: str = ""
     WEBAPP_URL: str = ""
 
+    # Feature Flags
+    USE_MOCK_DATA: bool = True
+
     class Config:
         env_file = ".env"
         extra = "ignore"

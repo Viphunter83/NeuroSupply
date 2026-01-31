@@ -1,26 +1,27 @@
-from pydantic import BaseModel
-from typing import List, Optional
+
 from uuid import UUID
-from datetime import date
+from datetime import datetime
+from pydantic import BaseModel, Field
+from typing import List, Optional, Any
+from src.db.models import OrderStatus
 
-class OrderItemDraft(BaseModel):
-    product_id: UUID
-    product_name_ru: str
-    product_name_vn: Optional[str]
+class OrderItem(BaseModel):
+    product_id: str
+    product_name: str
     unit: str
-    amount_needed: float
-    current_stock: float
-    forecast_sales: float
+    quantity: float
+    predicted_usage: float
+    stock: float
 
-class OrderDraftResponse(BaseModel):
-    date: date
+class OrderResponse(BaseModel):
+    id: UUID
     restaurant_id: UUID
-    items: List[OrderItemDraft]
+    created_at: datetime
+    status: OrderStatus
+    items: List[OrderItem]
 
-class OrderVerifyItem(BaseModel):
-    product_id: UUID
-    amount: float
+    class Config:
+        from_attributes = True
 
-class OrderVerifyRequest(BaseModel):
-    restaurant_id: UUID
-    items: List[OrderVerifyItem]
+class OrderConfirmRequest(BaseModel):
+    pass

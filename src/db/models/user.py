@@ -16,6 +16,6 @@ class User(Base):
 
     telegram_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.COOK)
-    linked_restaurant_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("restaurants.id"), nullable=True)
+    linked_restaurant_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("restaurants.id"), nullable=True)
 
     restaurant = relationship("Restaurant")
