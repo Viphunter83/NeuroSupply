@@ -1,6 +1,7 @@
 
 import logging
 from typing import Optional, List
+import uuid
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -14,6 +15,8 @@ logger = logging.getLogger(__name__)
 class OrderService:
     def __init__(self, db: AsyncSession):
         self.db = db
+        from src.services.calculation.engine_v2 import CalculationEngineV2
+        self.engine = CalculationEngineV2(db)
 
     async def get_latest_draft_order(self, restaurant_id: UUID) -> Optional[Order]:
         """
@@ -53,4 +56,70 @@ class OrderService:
         await self.db.refresh(order)
         
         logger.info(f"Order {order_id} confirmed (VERIFIED_BY_COOK).")
+        return order
+
+    async def generate_draft_order(self, restaurant_id: UUID, sales_plan_rub: float) -> Order:
+        """
+        Calculates needs and creates a new DRAFT order.
+        """
+        # 1. Calculate
+        items = await self.engine.calculate_needs(restaurant_id, sales_plan_rub)
+        
+        # 2. Create Order
+        new_order = Order(
+            restaurant_id=restaurant_id,
+            status=OrderStatus.DRAFT,
+            items=items
+        )
+        self.db.add(new_order)
+        await self.db.commit()
+        await self.db.refresh(new_order)
+        return new_order
+
+    async def update_order_items(self, order_id: UUID, new_items: List[dict]) -> Order:
+        """
+        Updates order items and logs anomalies.
+        """
+        stmt = select(Order).where(Order.id == order_id)
+        result = await self.db.execute(stmt)
+        order = result.scalar_one_or_none()
+        
+        if not order:
+             raise HTTPException(status_code=404, detail="Order not found")
+             
+        if order.status != OrderStatus.DRAFT:
+             raise HTTPException(status_code=400, detail="Cannot update confirmed order")
+
+        # Logic to detect anomalies (compare old vs new)
+        # For simplicity, we just save the new items.
+        # But we should log to Anomalies table if quantity differs significantly.
+        # Let's map old items by product_id
+        old_map = {item['product_id']: item for item in order.items}
+        
+        from src.db.models.analytics import Anomalies
+        
+        for new_item in new_items:
+            p_id = new_item.get('product_id')
+            new_qty = float(new_item.get('quantity', 0))
+            old_item = old_map.get(p_id)
+            
+            if old_item:
+                old_qty = float(old_item.get('quantity', 0))
+                if abs(new_qty - old_qty) > 0.01:
+                    # Anomaly detected
+                    anomaly = Anomalies(
+                        order_id=order.id,
+                        product_id=uuid.UUID(p_id),
+                        auto_qty=old_qty,
+                        manual_qty=new_qty,
+                        reason="Manual update via API"
+                    )
+                    self.db.add(anomaly)
+            else:
+                 # New item added?
+                 pass
+
+        order.items = new_items
+        await self.db.commit()
+        await self.db.refresh(order)
         return order

@@ -27,3 +27,6 @@ class OrderResponse(BaseModel):
 
 class OrderConfirmRequest(BaseModel):
     pass
+
+class OrderUpdate(BaseModel):
+    items: List[OrderItem]

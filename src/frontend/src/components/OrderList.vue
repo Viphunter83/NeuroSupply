@@ -58,9 +58,31 @@ const submitOrder = async () => {
     // Wait, requirement said: "Если повар меняет число...".
     // If backend only confirms, then changes are LOST.
     // But for this iteration task, let's stick to the requested endpoints.
-    // I will add a TODO or just send confirm.
-    
     try {
+        // 1. Save changes (PUT)
+        // We need to send full items list as per schema
+        const payload = {
+            items: items.value.map(i => ({
+                product_id: i.product_id,
+                product_name: i.product_name,
+                product_name_vn: i.product_name_vn,
+                image_url: i.image_url,
+                unit: i.unit,
+                quantity: parseFloat(i.quantity),
+                predicted_usage: i.predicted_usage,
+                stock: i.stock
+            }))
+        };
+
+        const updateResponse = await fetch(`/api/v1/order/${orderId.value}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!updateResponse.ok) throw new Error('Failed to update order');
+
+        // 2. Confirm (POST)
         const response = await fetch(`/api/v1/order/${orderId.value}/confirm`, {
             method: 'POST'
         });
