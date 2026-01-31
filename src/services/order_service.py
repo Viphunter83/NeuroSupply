@@ -6,6 +6,9 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi import HTTPException
+import io
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, Border, Side
 
 from src.db.models import Order, OrderStatus, Restaurant
 from src.schemas.order import OrderResponse
@@ -17,6 +20,61 @@ class OrderService:
         self.db = db
         from src.services.calculation.engine_v2 import CalculationEngineV2
         self.engine = CalculationEngineV2(db)
+
+    async def export_order_to_excel(self, order_id: UUID) -> io.BytesIO:
+        """
+        Generates an Excel file for the order.
+        Columns: "Код", "Наименование", "Ед. изм.", "Кол-во (План)", "Кол-во (Факт)", "Комментарий"
+        """
+        stmt = select(Order).where(Order.id == order_id)
+        result = await self.db.execute(stmt)
+        order = result.scalar_one_or_none()
+        
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f"Order {str(order_id)[:8]}"
+        
+        # Headers
+        headers = ["Код", "Наименование", "Ед. изм.", "Кол-во (План)", "Кол-во (Факт)", "Комментарий"]
+        for col_idx, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_idx, value=header)
+            cell.font = Font(bold=True)
+            cell.alignment = Alignment(horizontal='center')
+            cell.border = Border(bottom=Side(style='thin'))
+
+        # Data
+        # items is a list of dicts.
+        # Structure: product_id, product_name, unit, quantity (fact), predicted_usage (plan)
+        
+        for row_idx, item in enumerate(order.items, 2):
+            # item is dict
+            code = item.get('product_id', '') # Or iiko_id if available? Using internal ID for now or name
+            name = item.get('product_name', 'Unknown')
+            unit = item.get('unit', '')
+            qty_plan = item.get('predicted_usage', 0)
+            qty_fact = item.get('quantity', 0)
+            
+            ws.cell(row=row_idx, column=1, value=str(code))
+            ws.cell(row=row_idx, column=2, value=name)
+            ws.cell(row=row_idx, column=3, value=str(unit))
+            ws.cell(row=row_idx, column=4, value=qty_plan)
+            ws.cell(row=row_idx, column=5, value=qty_fact)
+            ws.cell(row=row_idx, column=6, value="") # Comment
+            
+        # Adjust column widths
+        ws.column_dimensions['A'].width = 30
+        ws.column_dimensions['B'].width = 40
+        ws.column_dimensions['C'].width = 10
+        ws.column_dimensions['D'].width = 15
+        ws.column_dimensions['E'].width = 15
+        
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return output
 
     async def get_latest_draft_order(self, restaurant_id: UUID) -> Optional[Order]:
         """

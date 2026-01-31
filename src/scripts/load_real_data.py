@@ -64,16 +64,10 @@ async def seed_data():
         await session.execute(delete(TechCard))
         await session.execute(delete(ProductMix))
         await session.execute(delete(StockBalance))
-        # Optional: Delete old products? Yes, to avoid duplicates if running multiple times
-        # But allow maintaining foreign keys if needed? 
-        # For this iteration, let's Wipe Products too to ensure clean state.
-        # But we need to handle cascade if Orders exist.
-        # Let's hope cascade works or we catch errors.
-        # Actually proper way: delete items first.
-        # For dev speed: just try to insert, if exists - skip? 
-        # No, clean slate is better for "Real Data" pivot.
+        await session.execute(delete(SalesPlan))
+        # Note: Wiping products might be risky if we have active orders, but for Dev it's ok.
         
-        # We need to preserve the Restaurant though!
+        # Check/Create Restaurant
         res = await session.execute(select(Restaurant).where(Restaurant.id == TEST_RESTAURANT_ID))
         restaurant = res.scalar_one_or_none()
         if not restaurant:
@@ -89,43 +83,74 @@ async def seed_data():
         
         # Add Products
         session.add_all(products)
-        await session.flush() # to get IDs
+        await session.flush()
         
-        # 2. Generate Tech Cards
+        # 2. Generate Tech Cards (Deterministic)
         print("Generating Tech Cards...")
         tech_cards = []
         product_ids = [p.id for p in products]
         
-        for dish_name, dish_id in DEMO_DISHES.items():
-            # Randomly pick 3-5 ingredients
-            num_ingredients = random.randint(3, 5)
-            ingredients = random.sample(product_ids, num_ingredients)
-            
-            for ing_id in ingredients:
-                tc = TechCard(
-                    iiko_dish_id=dish_id,
-                    product_id=ing_id,
-                    gross_amount=round(random.uniform(0.1, 0.5), 3) # 0.1 to 0.5 kg/unit
-                )
-                tech_cards.append(tc)
+        if product_ids:
+            for dish_name, dish_id in DEMO_DISHES.items():
+                # Use deterministic seed based on dish_id integer representation
+                random.seed(dish_id.int)
                 
+                num_ingredients = random.randint(3, 5)
+                # Ensure we don't sample more than available
+                cnt = min(num_ingredients, len(product_ids))
+                ingredients = random.sample(product_ids, cnt)
+                
+                for ing_id in ingredients:
+                    tc = TechCard(
+                        iiko_dish_id=dish_id,
+                        product_id=ing_id,
+                        gross_amount=round(random.uniform(0.1, 0.5), 3)
+                    )
+                    tech_cards.append(tc)
+        
         session.add_all(tech_cards)
         
-        # 3. Generate Product Mix (Sales Stats)
+        # 3. Generate Product Mix
         print("Generating Product Mix...")
         mixes = []
         for dish_name, dish_id in DEMO_DISHES.items():
-            # Probability: 0.2 to 2.0 dishes per 1000 RUB
+            random.seed(dish_id.int) # Same seed logic
             prob = round(random.uniform(0.2, 2.0), 2)
             pm = ProductMix(
                 restaurant_id=TEST_RESTAURANT_ID,
-                iiko_dish_id=str(dish_id), # Storing as string in DB
+                iiko_dish_id=str(dish_id),
                 probability=prob
             )
             mixes.append(pm)
             
         session.add_all(mixes)
         
+        # 4. Parse Sales Plan (New)
+        try:
+            from src.services.data_loader.sales_plan_parser import SalesPlanParser
+            from datetime import date
+            
+            # Using data_samples/NEW Ежедневный ВДНХ.xlsx as fallback standard
+            PLAN_FILE = "data_samples/NEW Ежедневный ВДНХ.xlsx"
+            parser = SalesPlanParser(PLAN_FILE)
+            
+            # Parse for current/next month (Mocking: Jan 2026 as per filename?)
+            # Filename says 2026? "Context: Прогноз 2026".
+            # Let's try to parse for the *current* month of the system to ensure data availability
+            today = date.today()
+            plans = parser.parse(TEST_RESTAURANT_ID, today.year, today.month)
+            if plans:
+                print(f"Loaded {len(plans)} sales plan entries.")
+                # Dedupe or bulk insert?
+                for p_data in plans:
+                    sp = SalesPlan(**p_data)
+                    session.add(sp)
+            else:
+                print("No sales plans found in parsed file.")
+
+        except Exception as e:
+            print(f"Skipping Sales Plan loading: {e}")
+
         await session.commit()
         print("Data ingestion complete!")
 

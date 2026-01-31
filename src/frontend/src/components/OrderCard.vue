@@ -37,7 +37,7 @@ const updateQuantity = (event) => {
     <!-- Content -->
     <div class="flex-1">
       <h3 class="font-bold text-gray-800 text-sm leading-tight">{{ item.product_name }}</h3>
-      <p class="text-xs text-gray-500 mt-1">{{ item.product_name_vn || 'Tên tiếng Việt' }}</p>
+      <p class="text-xs text-gray-500 mt-1">{{ item.unit }}</p>
     </div>
 
     <!-- Quantity Input -->

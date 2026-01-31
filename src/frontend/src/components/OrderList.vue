@@ -100,7 +100,7 @@ onMounted(() => {
 
 <template>
   <div v-if="isSuccess">
-      <SuccessScreen />
+      <SuccessScreen :orderId="orderId" />
   </div>
   <div v-else class="min-h-screen bg-gray-50 pb-20">
     <!-- Header -->
