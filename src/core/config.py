@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     
     IIKO_API_LOGIN: str = ""
     IIKO_API_KEY: str = ""
+    IIKO_ORG_ID: str = ""
     
     BOT_TOKEN: str = ""
     WEBAPP_URL: str = ""
