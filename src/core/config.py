@@ -2,6 +2,9 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     APP_ENV: str = "development"
+    # Google Integration
+    GOOGLE_CREDENTIALS_FILE: str = "secrets/google_credentials.json"
+    GOOGLE_SHEET_ID: str = "1mgqHPyqLZsDME4zxEds2XVPdxpVCmhM5zYdbfn62hqM"
     LOG_LEVEL: str = "INFO"
     
     POSTGRES_USER: str

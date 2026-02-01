@@ -1,6 +1,15 @@
-
 # Added by ggshield
 .cache_ggshield
 .env
 .env.bak
 *.bak
+secrets/
+
+# System and Environment
+.DS_Store
+venv/
+__pycache__/
+*.pyc
+
+# Data
+data_samples/
