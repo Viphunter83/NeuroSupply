@@ -3,10 +3,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.core.config import settings
 from src.api.v1.router import api_router
 
+from contextlib import asynccontextmanager
+from src.scheduler import start_scheduler, shutdown_scheduler
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    start_scheduler()
+    yield
+    # Shutdown
+    shutdown_scheduler()
+
 app = FastAPI(
     title="NeuroSupply Core API",
     version="0.1.0",
-    description="API for NeuroSupply system"
+    description="API for NeuroSupply system",
+    lifespan=lifespan
 )
 
 app.add_middleware(

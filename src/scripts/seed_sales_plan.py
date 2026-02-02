@@ -37,9 +37,9 @@ async def main():
             
         # 2. Create Sales Plans
         today = date.today()
-        dates = [today + timedelta(days=1), today + timedelta(days=2)]
+        dates = [today, today + timedelta(days=1), today + timedelta(days=2)]
         
-        amounts = [50000.0, 55000.0] # Dummy sales plan
+        amounts = [45000.0, 50000.0, 55000.0] # Dummy sales plan
         
         for d, amt in zip(dates, amounts):
             # Check if exists

@@ -3,12 +3,16 @@ import { ref, onMounted } from 'vue';
 import OrderCard from './OrderCard.vue';
 import SuccessScreen from './SuccessScreen.vue';
 
+const props = defineProps({
+  restaurantId: String
+});
+
 const items = ref([]);
 const orderId = ref(null);
 const loading = ref(true);
 const error = ref(null);
 const isSuccess = ref(false);
-const restaurantId = ref(null);
+const activeRestaurantId = ref(null);
 
 // Get query params
 const getQueryParams = () => {
@@ -17,10 +21,10 @@ const getQueryParams = () => {
 }
 
 const fetchOrder = async () => {
-    const rId = getQueryParams();
+    const rId = props.restaurantId || getQueryParams();
     // Fallback ID for testing if not in URL 
-    const finalId = rId || '00000000-0000-0000-0000-000000000000'; // Replace with valid test ID if needed
-    restaurantId.value = finalId;
+    const finalId = rId || 'f2c046ab-4068-4794-b6e1-e41045f9ea31'; // Default Test ID
+    activeRestaurantId.value = finalId;
 
     try {
         const response = await fetch(`/api/v1/order/latest?restaurant_id=${finalId}`);
@@ -31,7 +35,8 @@ const fetchOrder = async () => {
         items.value = data.items.map(i => ({
              ...i,
              id: i.product_id, // Map product_id to id for local usage
-             quantity: i.quantity 
+             quantity: i.quantity,
+             original_quantity: i.quantity // Store explicit original
         }));
     } catch (e) {
         error.value = e.message;
@@ -47,8 +52,27 @@ const handleQuantityUpdate = (productId, newQty) => {
     }
 };
 
+const handleCommentUpdate = (productId, comment) => {
+    const item = items.value.find(i => i.id === productId);
+    if (item) {
+        item.comment = comment;
+    }
+};
+
 const submitOrder = async () => {
     if (!orderId.value) return;
+
+    // Validation: Check for changed items without comments
+    const invalidItems = items.value.filter(i => {
+        const isChanged = i.quantity !== i.original_quantity;
+        const comment = (i.comment || '').trim();
+        return isChanged && !comment;
+    });
+
+    if (invalidItems.length > 0) {
+        alert('Please provide a reason for changing the quantity for: \n' + invalidItems.map(i => i.product_name).join(', '));
+        return;
+    }
     
     // In a real app we would send the updated items back.
     // The current backend endpoint confirms "as is" or we need to update items first?
@@ -70,7 +94,8 @@ const submitOrder = async () => {
                 unit: i.unit,
                 quantity: parseFloat(i.quantity),
                 predicted_usage: i.predicted_usage,
-                stock: i.stock
+                stock: i.stock,
+                comment: i.comment || null
             }))
         };
 
@@ -106,7 +131,7 @@ onMounted(() => {
     <!-- Header -->
     <div class="bg-white p-4 shadow-sm sticky top-0 z-10">
         <h1 class="text-xl font-bold text-gray-800">Review Order / Kiểm tra</h1>
-        <p class="text-xs text-gray-500">Shop ID: {{ restaurantId ? restaurantId.slice(0,8) + '...' : 'Unknown' }}</p>
+        <p class="text-xs text-gray-500">Shop ID: {{ activeRestaurantId ? activeRestaurantId.slice(0,8) + '...' : 'Unknown' }}</p>
     </div>
 
     <!-- List -->
@@ -119,8 +144,9 @@ onMounted(() => {
                 v-for="item in items" 
                 :key="item.id" 
                 :item="item" 
-                :initialQuantity="item.quantity"
+                :initialQuantity="item.original_quantity"
                 @update:quantity="handleQuantityUpdate"
+                @update:comment="handleCommentUpdate"
             />
         </div>
     </div>

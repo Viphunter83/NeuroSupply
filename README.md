@@ -34,13 +34,23 @@ cp .env.example .env
 *   `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`...
 *   `IIKO_API_LOGIN` - Логин API iiko (или оставьте пустым для Mock-режима)
 *   `TELEGRAM_BOT_TOKEN` - Токен от @BotFather
+*   **Google Sheets**:
+    *   Создайте сервисный аккаунт в Google Cloud Console.
+    *   Скачайте JSON-ключ и сохраните его как `secrets/service_account.json`. (Убедитесь, что `secrets/` в `.gitignore`).
+    *   Добавьте путь в `.env`: `GOOGLE_SHEETS_CREDENTIALS_PATH=secrets/service_account.json`.
+    *   Укажите ID таблицы: `GOOGLE_SHEETS_SPREADSHEET_ID=...`.
+    *   Предоставьте доступ сервисному аккаунту (email из JSON) к вашей таблице.
 
 ### 3. Запуск в Docker (Рекомендуется)
 ```bash
 docker-compose up -d --build
 ```
+*   **Web App (Frontend)**: `http://localhost:8080` (Логин/Пароль пока не требуются, демо-режим)
 *   **API**: `http://localhost:8000/docs`
-*   **DB**: `localhost:5432`
+*   **Public Access**: Доступен через Cloudflare Tunnel (см. логи `docker logs neurosupply_tunnel` для получения URL)
+*   **DB**: `localhost:5433` (Внешний порт)
+
+**Внимание**: Для работы с реальными данными Google Sheets убедитесь, что файл экспорта обновлен в `data_samples/google_export.xlsx` или настройте прямую интеграцию.
 
 ### 4. Локальный Запуск (Для разработки)
 ```bash

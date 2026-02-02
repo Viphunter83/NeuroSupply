@@ -25,10 +25,32 @@ async def get_latest_order(
         raise HTTPException(status_code=400, detail="No restaurant linked to user")
 
     service = OrderService(db)
+    # 1. Try to find existing DRAFT
     order = await service.get_latest_draft_order(target_rest_id)
-    if not order:
-        raise HTTPException(status_code=404, detail="No draft order found")
-    return order
+    if order:
+        return order
+
+    # 2. If no draft, check if we can generate one from Sales Plan
+    from datetime import date
+    from sqlalchemy import select
+    from src.db.models import SalesPlan
+    
+    # Check for today's plan
+    today = date.today()
+    stmt = select(SalesPlan).where(
+        SalesPlan.restaurant_id == target_rest_id,
+        SalesPlan.date == today
+    )
+    result = await db.execute(stmt)
+    plan = result.scalar_one_or_none()
+    
+    if plan and plan.amount_rub > 0:
+        # Generate new order
+        new_order = await service.generate_draft_order(target_rest_id, float(plan.amount_rub))
+        return new_order
+
+    # 3. If no plan, we can't generate.
+    raise HTTPException(status_code=404, detail="No draft order found and no Sales Plan for today to generate one.")
 
 @router.post("/{order_id}/confirm", response_model=OrderResponse)
 async def confirm_order(

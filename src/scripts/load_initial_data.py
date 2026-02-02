@@ -1,4 +1,8 @@
 
+import sys
+import os
+sys.path.append(os.getcwd())
+
 import asyncio
 import logging
 import pandas as pd

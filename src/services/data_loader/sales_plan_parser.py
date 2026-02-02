@@ -2,9 +2,9 @@
 import pandas as pd
 from datetime import date
 from typing import List, Dict, Optional
-from src.db.models import SalesPlan
 import uuid
 import logging
+import calendar
 
 logger = logging.getLogger(__name__)
 
@@ -12,114 +12,113 @@ class SalesPlanParser:
     def __init__(self, file_path: str):
         self.file_path = file_path
 
-    def parse(self, restaurant_id: uuid.UUID, year: int, month: int) -> List[dict]:
+    def parse(self, restaurant_id: uuid.UUID, year: int, month: int, restaurant_code: str = None) -> List[dict]:
         """
-        Parses the Excel file and extracts daily sales plans for a specific month.
-        Strategies:
-        1. Find a row containing 1, 2, 3... (Days).
-        2. Find a row labelled "План" or "Total" or simply below the days.
+        Parses the Google Sheet (Excel export) format "2. ПЛАН ПРОДАЖ".
+        Format is Monthly Summary per Restaurant.
+        
+        Args:
+            restaurant_id: The DB ID to assign to the plans.
+            restaurant_code: The code in "Точка (Ресторан)" column (e.g. "DNL", "VDNH").
+        
+        Returns:
+            List of daily SalesPlan dicts. Logic: Monthly / DaysInMonth.
         """
         try:
-            # Read header-less to find structure
-            df = pd.read_excel(self.file_path, header=None)
+            xl = pd.ExcelFile(self.file_path)
         except Exception as e:
-            logger.error(f"Failed to read Excel: {e}")
+            logger.error(f"Failed to open Excel file: {e}")
             return []
 
-        day_row_idx = -1
-        plan_values = {}
+        # 1. Find the Sheet
+        target_sheet = None
+        for sheet in xl.sheet_names:
+            if "ПЛАН" in sheet.upper() and ("ПРОДАЖ" in sheet.upper() or "SALES" in sheet.upper()):
+                target_sheet = sheet
+                break
+        
+        if not target_sheet:
+            # Fallback to index 2 if exists
+            if len(xl.sheet_names) > 2:
+                target_sheet = xl.sheet_names[2]
+                logger.warning(f"Sheet 'ПЛАН ПРОДАЖ' not found by name. Using index 2: {target_sheet}")
+            else:
+                logger.error("Could not find Sales Plan sheet.")
+                return []
 
-        # 1. Locate the Days row
+        df = xl.parse(target_sheet)
+        
+        # 2. Identify Columns
+        # Expected: 'Точка (Ресторан)', 'Прогноз Выручки (₽)', 'Период (Месяц/Неделя)'
+        col_map = {}
+        for col in df.columns:
+            c = str(col).lower()
+            if "точка" in c or "ресторан" in c:
+                col_map['code'] = col
+            elif "выруч" in c or "прогноз" in c or "amount" in c:
+                col_map['amount'] = col
+            elif "период" in c:
+                col_map['period'] = col
+        
+        if 'code' not in col_map or 'amount' not in col_map:
+            logger.error(f"Required columns not found in {target_sheet}. Found: {df.columns}")
+            return []
+
+        # 3. Find Row
+        target_amount = 0.0
+        found = False
+        
+        # Helper to match date (simple str matching for now "Январь 2026")
+        # We need to map (year, month) -> "Январь 2026"
+        month_names = ["", "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
+        target_period_str = f"{month_names[month]} {year}" # e.g. "Январь 2026"
+        
         for idx, row in df.iterrows():
-            # Check if row has sequence 1, 2, 3...
-            # We look for at least 5 consecutive days to be sure
-            values = row.dropna().tolist()
-            consecutive = 0
-            last_val = 0
-            
-            # Simple heuristic: check if we find 1, 2, 3, 4, 5
-            found_sequence = False
-            for v in values:
-                if isinstance(v, (int, float)):
-                    if v == last_val + 1:
-                        consecutive += 1
-                    else:
-                        consecutive = 1
-                        last_val = v if v == 1 else 0 # Reset or start if 1
-                    
-                    if consecutive >= 5:
-                        found_sequence = True
-                        break
-                elif str(v).strip() == '1':
-                     last_val = 1
-                     consecutive = 1
+            # Check Period
+            if 'period' in col_map:
+                per = str(row[col_map['period']]).strip()
+                # Fuzzy match or exact?
+                # The file has "Январь 2026".
+                if target_period_str.lower() not in per.lower():
+                    continue
 
-            if found_sequence:
-                day_row_idx = idx
-                break
-        
-        if day_row_idx == -1:
-            logger.warning("Could not find row with Days (1..31).")
+            # Check Code
+            r_code = str(row[col_map['code']]).strip()
+            
+            # If restaurant_code provided, match it
+            if restaurant_code:
+                if r_code.lower() == restaurant_code.lower():
+                    target_amount = float(row[col_map['amount']])
+                    found = True
+                    break
+            else:
+                # If not provided, maybe match by ID? Impossible. 
+                # Fallback: Just take the first one? Or error?
+                # Let's log warning and take the first one for testing purposes.
+                logger.warning(f"No restaurant_code provided. Using first row for {r_code}")
+                try:
+                    target_amount = float(row[col_map['amount']])
+                    found = True
+                    break
+                except:
+                    continue
+
+        if not found:
+            logger.warning(f"No plan found for code '{restaurant_code}' in period '{target_period_str}'")
             return []
 
-        # 2. Extract Data
-        # We assume the dates are in this row. We need to find the corresponding columns.
-        days_map = {} # day_int -> col_idx
-        row_data = df.iloc[day_row_idx]
+        # 4. Generate Daily Plans
+        # Logic: Uniform distribution
+        _, days_in_month = calendar.monthrange(year, month)
+        daily_amount = target_amount / days_in_month
         
-        for col_idx, val in row_data.items():
-            try:
-                d = int(float(val))
-                if 1 <= d <= 31:
-                    days_map[d] = col_idx
-            except:
-                pass
-
-        if not days_map:
-             return []
-
-        # 3. Find "Plan" row
-        # Usually looking for "Товарооборот" or "Выручка" or "План" in the first few columns
-        plan_row_idx = -1
-        
-        # Search below the day row
-        for idx in range(day_row_idx + 1, len(df)):
-            row_head = str(df.iloc[idx, 0:5].values).lower() # Check first 5 cols for keyword
-            if any(x in row_head for x in ['план', 'выручка', 'товарооборот', 'total', 'sales']):
-                plan_row_idx = idx
-                break
-        
-        # Fallback: if not found, maybe it's just the next row?
-        if plan_row_idx == -1:
-             # Try date_row + 1
-             plan_row_idx = day_row_idx + 1
-             logger.warning(f"Keyword not found, falling back to row {plan_row_idx}")
-
-        # Extract values
         sales_plans = []
-        plan_row = df.iloc[plan_row_idx]
-
-        for d, col in days_map.items():
-            try:
-                # Handle month length
-                try:
-                    target_date = date(year, month, d)
-                except ValueError:
-                    continue # Invalid date (e.g. Feb 30)
-
-                amount = float(plan_row[col])
-                
-                # Check for NaNs
-                if pd.isna(amount): 
-                    amount = 0.0
-                    
-                sales_plans.append({
-                    "restaurant_id": restaurant_id,
-                    "date": target_date,
-                    "amount_rub": amount
-                })
-            except Exception as e:
-                logger.error(f"Error parsing day {d}: {e}")
-                continue
-
+        for d in range(1, days_in_month + 1):
+            sales_plans.append({
+                "restaurant_id": restaurant_id,
+                "date": date(year, month, d),
+                "amount_rub": round(daily_amount, 2)
+            })
+            
+        logger.info(f"Generated {len(sales_plans)} daily plans of {daily_amount:.2f} RUB for {restaurant_code}")
         return sales_plans

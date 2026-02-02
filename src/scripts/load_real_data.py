@@ -4,7 +4,7 @@ import pandas as pd
 import random
 from sqlalchemy import select, delete
 from src.db.session import async_session_maker
-from src.db.models import Product, Restaurant, TechCard, ProductMix, StockBalance
+from src.db.models import Product, Restaurant, TechCard, ProductMix, StockBalance, SalesPlan
 
 FILE_PATH = "data_samples/Для_кафе_с_Ежедневными_поставками.xlsx"
 TEST_RESTAURANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000000")
@@ -130,15 +130,19 @@ async def seed_data():
             from src.services.data_loader.sales_plan_parser import SalesPlanParser
             from datetime import date
             
-            # Using data_samples/NEW Ежедневный ВДНХ.xlsx as fallback standard
-            PLAN_FILE = "data_samples/NEW Ежедневный ВДНХ.xlsx"
+            # Using google_export.xlsx (Actual downloaded structure)
+            PLAN_FILE = "data_samples/google_export.xlsx"
             parser = SalesPlanParser(PLAN_FILE)
             
             # Parse for current/next month (Mocking: Jan 2026 as per filename?)
-            # Filename says 2026? "Context: Прогноз 2026".
-            # Let's try to parse for the *current* month of the system to ensure data availability
+            # The file has "Январь 2026". We need to match that. 
+            # If today is NOT Jan 2026, the parser will return empty.
+            # Let's Force Jan 2026 for testing if needed, or check today.
+            # Using code "ANG" because it's in the file.
             today = date.today()
-            plans = parser.parse(TEST_RESTAURANT_ID, today.year, today.month)
+            # FORCE Jan 2026 for this test because the file is static
+            year, month = 2026, 1 
+            plans = parser.parse(TEST_RESTAURANT_ID, year, month, restaurant_code="ANG")
             if plans:
                 print(f"Loaded {len(plans)} sales plan entries.")
                 # Dedupe or bulk insert?

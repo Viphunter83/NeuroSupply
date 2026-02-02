@@ -2,9 +2,11 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     APP_ENV: str = "development"
+    
     # Google Integration
-    GOOGLE_CREDENTIALS_FILE: str = "secrets/google_credentials.json"
-    GOOGLE_SHEET_ID: str = "1mgqHPyqLZsDME4zxEds2XVPdxpVCmhM5zYdbfn62hqM"
+    GOOGLE_SHEETS_CREDENTIALS_PATH: str = "secrets/service_account.json"
+    GOOGLE_SHEETS_SPREADSHEET_ID: str = "1mgqHPyqLZsDME4zxEds2XVPdxpVCmhM5zYdbfn62hqM"
+    
     LOG_LEVEL: str = "INFO"
     
     POSTGRES_USER: str
@@ -26,6 +28,7 @@ class Settings(BaseSettings):
 
     # Feature Flags
     USE_MOCK_DATA: bool = True
+    SAFETY_STOCK_RATIO: float = 1.1
 
     class Config:
         env_file = ".env"

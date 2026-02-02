@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-neurosupply}
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -17,7 +17,7 @@ services:
     container_name: neurosupply_redis
     restart: always
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
 
@@ -36,25 +36,12 @@ services:
       - redis
     environment:
       - PG_DSN=postgresql+asyncpg://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-neurosupply}
-
-  worker:
-    build: .
-    container_name: neurosupply_worker
-    command: taskiq worker src.broker:broker
-    volumes:
-      - .:/app
-    env_file:
-      - .env
-    depends_on:
-      - db
-      - redis
-    environment:
-      - PG_DSN=postgresql+asyncpg://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-neurosupply}
+      - PYTHONPATH=/app
 
   bot:
     build: .
     container_name: neurosupply_bot
-    command: python -m src.bot.main
+    command: python src/bot/main.py
     volumes:
       - .:/app
     env_file:
@@ -65,6 +52,26 @@ services:
       - app
     environment:
       - PG_DSN=postgresql+asyncpg://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-neurosupply}
+      - PYTHONPATH=/app
+
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: neurosupply_frontend
+    ports:
+      - "8090:80"
+    depends_on:
+      - app
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: neurosupply_tunnel
+    restart: always
+    command: tunnel --protocol http2 --url http://frontend:80
+    depends_on:
+      - frontend
+      - app
 
 volumes:
   postgres_data:

@@ -1,5 +1,10 @@
 import asyncio
 import logging
+import sys
+import os
+
+sys.path.append(os.getcwd())
+
 from aiogram import Bot, Dispatcher
 from src.core.config import settings
 

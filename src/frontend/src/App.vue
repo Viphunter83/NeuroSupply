@@ -1,7 +1,7 @@
 <script setup>
-import OrderList from './components/OrderList.vue'
+import Dashboard from './components/Dashboard.vue'
 </script>
 
 <template>
-  <OrderList />
+  <Dashboard />
 </template>

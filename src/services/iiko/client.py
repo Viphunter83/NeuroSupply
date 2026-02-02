@@ -106,6 +106,16 @@ class IikoClient:
         if not self.token:
             await self.auth()
         
+        # Mock Data Logic
+        if settings.USE_MOCK_DATA:
+            logger.info("Using MOCK DATA for Stock Balances")
+            # Return some dummy items to verify calculation logic
+            # Structure: productId, amount
+            return [
+                {"productId": "00000000-0000-0000-0000-000000000000", "amount": 10.5}, # Dummy
+                # In real scenario, we might want to fetch products from DB and assign random stocks
+            ]
+
         # Placeholder as endpoint depends on exact business license/modules
         logger.warning(f"get_stock_balances not fully implemented (endpoint uncertain). Returning empty.")
         return []

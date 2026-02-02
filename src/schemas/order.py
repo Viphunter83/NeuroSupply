@@ -14,6 +14,7 @@ class OrderItem(BaseModel):
     quantity: float
     predicted_usage: float
     stock: float
+    comment: Optional[str] = None
 
 class OrderResponse(BaseModel):
     id: UUID

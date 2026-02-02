@@ -62,7 +62,7 @@ class OrderService:
             ws.cell(row=row_idx, column=3, value=str(unit))
             ws.cell(row=row_idx, column=4, value=qty_plan)
             ws.cell(row=row_idx, column=5, value=qty_fact)
-            ws.cell(row=row_idx, column=6, value="") # Comment
+            ws.cell(row=row_idx, column=6, value=item.get('comment', '')) # Comment
             
         # Adjust column widths
         ws.column_dimensions['A'].width = 30
@@ -165,17 +165,29 @@ class OrderService:
                 old_qty = float(old_item.get('quantity', 0))
                 if abs(new_qty - old_qty) > 0.01:
                     # Anomaly detected
+                    # Check if reason provided in item
+                    reason = new_item.get('reason', "Manual update via API")
+                    
                     anomaly = Anomalies(
                         order_id=order.id,
                         product_id=uuid.UUID(p_id),
                         auto_qty=old_qty,
                         manual_qty=new_qty,
-                        reason="Manual update via API"
+                        reason=reason
                     )
                     self.db.add(anomaly)
             else:
                  # New item added?
-                 pass
+                 # Treat as anomaly from 0 to New Qty
+                 reason = new_item.get('reason', "Manual addition via API")
+                 anomaly = Anomalies(
+                     order_id=order.id,
+                     product_id=uuid.UUID(p_id),
+                     auto_qty=0.0,
+                     manual_qty=new_qty,
+                     reason=reason
+                 )
+                 self.db.add(anomaly)
 
         order.items = new_items
         await self.db.commit()
