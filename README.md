@@ -1,4 +1,12 @@
-# NeuroSupply - Автономная Система Управления Запасами
+# NeuroSupply System
+
+> **⚠️ ACTIVE DEVELOPMENT STATE (Feb 2, 2026)**
+> Please refer to **[PROJECT_STATE.md](PROJECT_STATE.md)** for the most up-to-date documentation, architecture overview, and deployment instructions.
+> The info below might be outdated.
+
+---
+
+## OverviewАвтономная Система Управления Запасами
 
 ## Обзор
 **NeuroSupply** - это интеллектуальная система для автоматизации управления запасами ресторанов, интегрированная с iikoCloud. Система анализирует продажи, рассчитывает потребности в закупках, формирует черновики заказов и позволяет управляющим подтверждать их через Telegram-бота.
