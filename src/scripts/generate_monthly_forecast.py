@@ -33,7 +33,7 @@ WEIGHTS = {
 
 async def main():
     logger.info("Starting Forecasting...")
-    client = SheetsClient()
+    client = SheetsClient(settings.GOOGLE_SHEETS_SPREADSHEET_ID)
     
     # 1. Get Context
     rest_name = client.get_active_restaurant_name()

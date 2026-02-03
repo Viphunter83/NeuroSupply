@@ -116,14 +116,68 @@ class OrderService:
         logger.info(f"Order {order_id} confirmed (VERIFIED_BY_COOK).")
         return order
 
+
+    async def _export_draft_to_sheet(self, restaurant_id: UUID, items: List[dict]):
+        """Helper to export draft to sheet safely."""
+        try:
+            stmt = select(Restaurant).where(Restaurant.id == restaurant_id)
+            result = await self.db.execute(stmt)
+            restaurant = result.scalar_one_or_none()
+            
+            if restaurant and restaurant.spreadsheet_id:
+                from src.services.data_loader.sheets_client import SheetsClient
+                client = SheetsClient(restaurant.spreadsheet_id)
+                # Run in executor if sync, but gspread is sync, so we might block slightly. 
+                # For now direct call is acceptable for MVP.
+                # Ideally: await run_in_executor(...)
+                import asyncio
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(None, client.write_draft_order, items)
+                logger.info(f"Exported draft order to sheet for {restaurant.name}")
+            else:
+                logger.warning(f"No spreadsheet_id for restaurant {restaurant_id}, skipping export.")
+        except Exception as e:
+            logger.error(f"Failed to export draft to sheet: {e}")
+
     async def generate_draft_order(self, restaurant_id: UUID, sales_plan_rub: float) -> Order:
         """
         Calculates needs and creates a new DRAFT order.
+        Fetches dynamic settings (Safety Stock, Transit) from Google Sheets first.
         """
-        # 1. Calculate
-        items = await self.engine.calculate_needs(restaurant_id, sales_plan_rub)
+        # 0. Fetch Settings from Sheets (if possible)
+        # We need restaurant object first
+        stmt = select(Restaurant).where(Restaurant.id == restaurant_id)
+        result = await self.db.execute(stmt)
+        restaurant = result.scalar_one_or_none()
         
-        # 2. Create Order
+        calc_settings = {}
+        if restaurant and restaurant.spreadsheet_id:
+            try:
+                from src.services.data_loader.sheets_client import SheetsClient
+                client = SheetsClient(restaurant.spreadsheet_id)
+                import asyncio
+                loop = asyncio.get_running_loop()
+                # Run in executor to avoid blocking main thread
+                calc_settings = await loop.run_in_executor(None, client.fetch_settings)
+                logger.info(f"Fetched settings for {restaurant.name}: {calc_settings}")
+            except Exception as e:
+                logger.warning(f"Could not fetch settings from sheet, using defaults: {e}")
+
+        # 1. Calculate Needs (using V2 Logic)
+        # Now returns tuple: (items, dish_breakdown)
+        # Pass settings if active
+        # settings dict keys: 'safety_stock', 'days_in_transit'
+        ss = calc_settings.get("safety_stock")
+        dit = calc_settings.get("days_in_transit", 0)
+        
+        items, dish_breakdown = await self.engine.calculate_needs(
+            restaurant_id, 
+            sales_plan_rub,
+            safety_stock=ss,
+            days_in_transit=dit
+        )
+        
+        # 2. Create Order in DB
         new_order = Order(
             restaurant_id=restaurant_id,
             status=OrderStatus.DRAFT,
@@ -132,7 +186,33 @@ class OrderService:
         self.db.add(new_order)
         await self.db.commit()
         await self.db.refresh(new_order)
+        
+        # 3. Export to Sheets (Feedback Loop)
+        # 3.1 Export Draft Order (Tab 4)
+        # We need to await these exports or fire-and-forget?
+        # Awaiting ensures user sees it immediately.
+        await self._export_draft_to_sheet(restaurant_id, items)
+        
+        # 3.2 Export Dish Calculation (Tab 2a) - NEW
+        await self._export_dish_calc_to_sheet(restaurant_id, dish_breakdown)
+        
         return new_order
+        
+    async def _export_dish_calc_to_sheet(self, restaurant_id: UUID, dishes: List[dict]):
+        try:
+            stmt = select(Restaurant).where(Restaurant.id == restaurant_id)
+            result = await self.db.execute(stmt)
+            restaurant = result.scalar_one_or_none()
+            
+            if restaurant and restaurant.spreadsheet_id:
+                from src.services.data_loader.sheets_client import SheetsClient
+                client = SheetsClient(restaurant.spreadsheet_id)
+                import asyncio
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(None, client.write_dish_calculation, dishes)
+                logger.info(f"Exported dish calculation for {restaurant.name}")
+        except Exception as e:
+            logger.error(f"Failed to export dish calc: {e}")
 
     async def update_order_items(self, order_id: UUID, new_items: List[dict]) -> Order:
         """
@@ -152,15 +232,30 @@ class OrderService:
         # For simplicity, we just save the new items.
         # But we should log to Anomalies table if quantity differs significantly.
         # Let's map old items by product_id
-        old_map = {item['product_id']: item for item in order.items}
-        
         from src.db.models.analytics import Anomalies
+        from src.db.models import Product
         
+        # Pre-fetch products for all items to get package_size
+        p_ids = [uuid.UUID(item.get('product_id')) for item in new_items if item.get('product_id')]
+        p_stmt = select(Product).where(Product.id.in_(p_ids))
+        p_res = await self.db.execute(p_stmt)
+        p_map = {p.id: p for p in p_res.scalars().all()}
+
+        # Map old items for comparison
+        old_map = {item.get('product_id'): item for item in (order.items or [])}
+
         for new_item in new_items:
-            p_id = new_item.get('product_id')
+            p_id_str = new_item.get('product_id')
+            p_id = uuid.UUID(p_id_str) if p_id_str else None
             new_qty = float(new_item.get('quantity', 0))
-            old_item = old_map.get(p_id)
+            old_item = old_map.get(p_id_str)
             
+            # Recalculate quantity_kg based on product package_size
+            product = p_map.get(p_id)
+            if product:
+                pkg_size = float(product.package_size) if product.package_size else 0.0
+                new_item['quantity_kg'] = round(new_qty * pkg_size if pkg_size > 0 else new_qty, 4)
+
             if old_item:
                 old_qty = float(old_item.get('quantity', 0))
                 if abs(new_qty - old_qty) > 0.01:

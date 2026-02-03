@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 async def populate_real_data():
     logger.info("Initializing clients...")
     iiko = IikoClient()
-    sheets = SheetsClient()
+    sheets = SheetsClient(settings.GOOGLE_SHEETS_SPREADSHEET_ID)
     
     try:
         # 1. Auth and Fetch Data

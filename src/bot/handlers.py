@@ -55,21 +55,32 @@ async def cmd_check_order(message: types.Message):
     """
     Direct link to the dashboard for order checking.
     """
-    # Use default or linked restaurant (Future: fetch from DB)
-    demo_org_id = settings.IIKO_ORG_ID
-    
     base_url = settings.WEBAPP_URL or "http://localhost:5173"
-    webapp_url = f"{base_url}?restaurant_id={demo_org_id}"
-
-    kb = [
-        [types.InlineKeyboardButton(
-            text="Open Dashboard 🚀", 
-            web_app=WebAppInfo(url=webapp_url)
-        )]
-    ]
-    keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb)
     
-    await message.answer("Click to open the NeuroSupply Dashboard:", reply_markup=keyboard)
+    async with async_session_maker() as db:
+        from src.db.models import Restaurant
+        result = await db.execute(select(Restaurant))
+        restaurants = result.scalars().all()
+    
+    if not restaurants:
+        await message.answer("No restaurants configured.")
+        return
+
+    # If only one, show directly
+    if len(restaurants) == 1:
+        r = restaurants[0]
+        webapp_url = f"{base_url}?restaurant_id={r.iiko_id}"
+        kb = [[types.InlineKeyboardButton(text=f"Open {r.name} 🚀", web_app=WebAppInfo(url=webapp_url))]]
+        await message.answer(f"Dashboard for {r.name}:", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=kb))
+    else:
+        # Show list
+        kb = []
+        for r in restaurants:
+            webapp_url = f"{base_url}?restaurant_id={r.iiko_id}"
+            kb.append([types.InlineKeyboardButton(text=f"Open {r.name}", web_app=WebAppInfo(url=webapp_url))])
+        
+        await message.answer("Select Restaurant to manage:", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=kb))
+
 
 @router.message(lambda message: message.text == "📊 Get Report")
 @router.message(Command("report"))
@@ -79,50 +90,49 @@ async def cmd_report(message: types.Message):
     """
     await message.answer("Generating report... ⏳")
     
-    # TODO: Connect to NotificationService here to reuse logic
-    # For now, just a placeholder or reuse debug logic
-    
     try:
         async with async_session_maker() as db:
-            engine = CalculationEngineV2(db)
-            org_id_str = settings.IIKO_ORG_ID
-            
-            # Find Rest
             from src.db.models import Restaurant
-            res = await db.execute(select(Restaurant).where(Restaurant.iiko_id == org_id_str))
-            restaurant = res.scalar_one_or_none()
+            result = await db.execute(select(Restaurant))
+            restaurants = result.scalars().all()
             
-            if not restaurant:
-                await message.answer("Error: Restaurant configuration missing.")
+            if not restaurants:
+                await message.answer("Error: No restaurants found in DB.")
                 return
 
-            # Calc (Mock Plan 50k)
-            # In real Report we should fetch TODAY's plan
-            results = await engine.calculate_needs(restaurant.id, 50000.0)
+            # For now, if multiple, report ALL (or we could ask user)
+            # Simplification: Loop through all and report
             
-            count = len(results)
-            total_items = sum(r['quantity'] for r in results)
-            
-            text = (
-                f"<b>Daily Report 📊</b>\n"
-                f"Restaurant: {restaurant.name}\n"
-                f"Plan: 50,000 ₽\n\n"
-                f"Positions to order: {count}\n"
-                f"Total Items: {total_items}\n\n"
-                f"<i>Open Dashboard for details.</i>"
-            )
-            
-            # Button to Dashboard
             base_url = settings.WEBAPP_URL or "http://localhost:5173"
-            webapp_url = f"{base_url}?restaurant_id={org_id_str}"
             
-            kb = [[types.InlineKeyboardButton(text="Open Dashboard", web_app=WebAppInfo(url=webapp_url))]]
-            
-            await message.answer(text, parse_mode="HTML", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=kb))
+            for restaurant in restaurants:
+                engine = CalculationEngineV2(db)
+                
+                # Fetch Plan (MOCK for now, ideally fetch from Sheets using restaurant.spreadsheet_id)
+                # TODO: Implement Sheets fetching logic here using SheetsClient(restaurant.spreadsheet_id)
+                plan_amount = 50000.0 
+                
+                results = await engine.calculate_needs(restaurant.id, plan_amount)
+                
+                count = len(results)
+                total_items = sum(r['quantity'] for r in results)
+                
+                text = (
+                    f"<b>Daily Report 📊</b>\n"
+                    f"Restaurant: {restaurant.name}\n"
+                    f"Plan: {plan_amount:,.0f} ₽\n\n"
+                    f"Positions to order: {count}\n"
+                    f"Total Items: {total_items}\n"
+                )
+                
+                webapp_url = f"{base_url}?restaurant_id={restaurant.iiko_id}"
+                kb = [[types.InlineKeyboardButton(text=f"Open {restaurant.name}", web_app=WebAppInfo(url=webapp_url))]]
+                
+                await message.answer(text, parse_mode="HTML", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=kb))
             
     except Exception as e:
         logger.error(f"Report error: {e}")
-        await message.answer("Failed to generate report.")
+        await message.answer(f"Failed to generate report: {e}")
     
 # Keep debug_calc for admin usage
 @router.message(Command("debug_calc"))

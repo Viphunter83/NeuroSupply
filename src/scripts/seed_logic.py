@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 async def seed_logic_data():
     logger.info("Starting Seed Logic from Sheets...")
     
-    sheets = SheetsClient()
+    sheets = SheetsClient(settings.GOOGLE_SHEETS_SPREADSHEET_ID)
     
     # 1. Fetch Data from Sheets
     logger.info("Fetching data from Google Sheets...")

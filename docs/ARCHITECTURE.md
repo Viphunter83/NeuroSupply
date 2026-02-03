@@ -1,55 +1,72 @@
-# Архитектура NeuroSupply
+# Техническая архитектура NeuroSupply (v1.2)
 
-Система построена по микросервисной (в будущем) архитектуре, но на данном этапе является модульным монолитом.
+Система NeuroSupply представляет собой модульный Python-сервис, объединяющий расчетную логику, интеграции с внешними SaaS (iiko, Google) и интерфейсы взаимодействия с пользователем.
 
-## Компоненты
+---
 
-### 1. Core API (FastAPI)
-Центральный узел системы.
-*   **Responsibilities**:
-    *   Принимает запросы от фронтенда (в будущем) и внешних систем.
-    *   Управляет циклом жизни заказа (Draft -> Verified -> Sent).
-    *   Предоставляет данные для Telegram Бота.
-*   **Location**: `src/api`
+## 🏗 Ключевые компоненты и Интеграции
 
-### 2. Calculation Engine
-Модуль бизнес-логики для расчета потребностей.
-*   **Algorithm**:
-    1.  Запрашивает план продаж (или 7-дневную историю).
-    2.  Запрашивает текущие остатки (iiko/Mock).
-    3.  Вычисляет прогноз расхода: `Predicted = AvgDailyUsage * SalesPlanMultiplier`.
-    4.  Вычисляет потребность: `Need = (Predicted * SafetyStock) - CurrentStock`.
-    5.  Округляет до упаковок поставщика.
-*   **DataSource**: `SalesPlan` (DB), `StockBalance` (DB/Iiko).
-*   **Location**: `src/services/calculation`
+### 1. Бэкенд (Core Service)
+Ядро системы, написанное на **FastAPI**.
+*   **Технологии**: Python 3.11, PostgreSQL (SQLAlchemy Async), APScheduler (для ночных задач).
+*   **Логика взаимодействия**:
+    *   **API**: Служит источником данных для Telegram Mini App.
+    *   **Scheduler**: Оркестрирует запуск синхронизации (04:00) и расчета (06:00).
+*   **Пути интеграции**:
+    *   `src/services/calculation/engine_v2.py` — главный «процессор» потребностей.
+    *   `src/services/order_service.py` — управление жизненным циклом заказов и генерация Excel.
 
-### 3. Iiko Client
-Адаптер для взаимодействия с iikoTransport API.
-*   **Capabilities**:
-    *   Auth (Token refresh).
-    *   Fetch Products (Nomenclature).
-    *   Fetch Sales (OLAP Reports).
-*   **Location**: `src/services/iiko`
+### 2. Telegram Mini App & Bot
+Фронтенд-интерфейс для линейного персонала.
+*   **Роль**: Единственный инструмент повара для подтверждения заказов.
+*   **Интеграция с Бэкендом**:
+    *   Использует REST API бэкенда для получения списка черновиков.
+    *   Отправляет `PATCH` или `POST` запросы для обновления количеств и подтверждения.
+*   **Пути интеграции**:
+    *   `src/bot/` — логика бота (Aiogram 3).
+    *   `src/api/v1/endpoints/orders.py` — эндпоинты, обслуживающие UI приложения.
 
-### 4. Telegram Bot (Aiogram)
-Интерфейс для персонала ресторана.
-*   **Features**:
-    *   Polling-режим (запускается отдельно).
-    *   Использует `OrderService` для доступа к данным (Shared Codebase).
-*   **Location**: `src/bot`, `src/run_bot.py`
+### 3. Google Sheets (Control Panel)
+Инструмент для менеджмента и аналитики.
+*   **Роль**: Мастер-система для настроек и ввода планов.
+*   **Взаимодействие с Бэкендом**:
+    *   **Pull (04:00)**: Бэкенд выкачивает настройки (Safety Stock), техкарты и планы продаж.
+    *   **Push (06:00)**: Бэкенд записывает результаты расчета (Draft Order) и декомпозицию блюд (Dish Calc) обратно в таблицу.
+*   **Пути интеграции**:
+    *   `src/services/data_loader/sheets_client.py` — низкоуровневая работа с Google API (gspread).
+    *   `src/scripts/sync_sheet_to_db.py` — скрипт массовой синхронизации данных из таблиц.
 
-### 5. Database (PostgreSQL)
-Основное хранилище данных.
-*   **Schema**:
-    *   `products`: Справочник товаров (связь с iiko_id).
-    *   `restaurants`: Справочник точек.
-    *   `orders`: Заказы (JSONB items).
-    *   `sales_plans`: Планы выручки.
+### 4. iikoCloud (Source System)
+Источник фактических данных по продажам и остаткам.
+*   **Роль**: Поставляет данные о фактических продажах (для обучения AI) и текущих складских остатках.
+*   **Взаимодействие**:
+    *   Использует API v1 (Transport/Cloud).
+    *   Основной запрос: `GetSalesOlap` для получения истории выручки по категориям.
+*   **Пути интеграции**:
+    *   `src/services/iiko/client.py` — клиент для работы с API iiko.
+    *   `src/services/data_loader/iiko_loader.py` — загрузчик данных в БД.
 
-## Поток Данных (Data Flow)
+---
 
-1.  **Sync**: Скрипт (или Celery task) загружает Nomenclatures, Sales, Stocks из iiko -> DB.
-2.  **Calculation**: `CalculationEngine` читает DB -> Создает `Order` (status=DRAFT).
-3.  **Notification**: Менеджер получает уведомление (или сам пишет `/check`).
-4.  **Confirmation**: Менеджер жмет "Confirm" -> API обновляет статус на `VERIFIED_BY_COOK`.
-5.  **Export** (Future): Система отправляет заказ поставщику (Email/API).
+## 🔄 Схема взаимодействия (Flow)
+
+```mermaid
+graph TD
+    A[iikoCloud] -- "Склады/Продажи" --> B(NeuroSupply Backend)
+    C[Google Sheets] -- "План/Настройки" --> B
+    B -- "Черновик заказа" --> C
+    B -- "Уведомление" --> D[Telegram Bot]
+    D -- "Открывает" --> E[Mini App]
+    E -- "Подтверждение/Правки" --> B
+    B -- "Excel файл" --> D
+```
+
+---
+
+## 🛠 Пути к критическим узлам для разработчика
+
+1.  **Расчетная логика**: `src/services/calculation/engine_v2.py`
+2.  **Работа с таблицами**: `src/services/data_loader/sheets_client.py`
+3.  **Управление заказами**: `src/services/order_service.py`
+4.  **Модели БД**: `src/db/models/`
+5.  **Планировщик**: `src/scheduler.py`

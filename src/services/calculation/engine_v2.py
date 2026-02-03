@@ -18,13 +18,13 @@ class CalculationEngineV2:
         self.db = db
         self.forecaster = ForecastService()
 
-    async def calculate_needs(self, restaurant_id: uuid.UUID, sales_plan_rub: float) -> List[Dict]:
+    async def calculate_needs(self, restaurant_id: uuid.UUID, sales_plan_rub: float, safety_stock: float = None, days_in_transit: int = 0) -> tuple[List[Dict], List[Dict]]:
         """
         Money-to-Ingredient Algorithm (v2.0 - Audit Fixes):
         1. Sales Plan (RUB) -> 2. Dish Qty -> 3. Ingredient Qty
-        4. Apply Safety Stock (1.1x)
+        4. Apply Safety Stock (Dynamic or Default 1.1x)
         5. Subtract Stock Balance
-        6. Subtract Goods in Transit (Orders verified in last 24h)
+        6. Subtract Goods in Transit (Orders verified in last 24h + days_in_transit buffer)
         7. Round up to Packages (Boxes)
         """
         logger.info(f"Starting calculation for restaurant {restaurant_id} with plan {sales_plan_rub} RUB")
@@ -89,11 +89,11 @@ class CalculationEngineV2:
 
         # 1.6 Fetch Transit (Last 24h Verified Orders)
         # We assume "In Transit" = Verified but not yet delivered (approx 24h window)
-        transit_cutoff = datetime.utcnow() - timedelta(hours=24)
+        last_verified_cutoff = datetime.utcnow() - timedelta(hours=24 + (days_in_transit * 24))
         stmt_transit = select(Order).where(
             Order.restaurant_id == restaurant_id,
             Order.status.in_([OrderStatus.VERIFIED_BY_COOK, OrderStatus.EXPORTED_TO_PROCOB]),
-            Order.created_at >= transit_cutoff
+            Order.created_at >= last_verified_cutoff
         )
         result_transit = await self.db.execute(stmt_transit)
         transit_orders = result_transit.scalars().all()
@@ -101,25 +101,21 @@ class CalculationEngineV2:
         transit_map: Dict[uuid.UUID, float] = {}
         for order in transit_orders:
             for item in order.items:
-                # Item structure in JSON: {'product_id': 'uuid_str', 'quantity': 5.0, ...}
                 p_id_str = item.get('product_id')
-                qty = float(item.get('quantity', 0.0)) # Using 'quantity' which is the ordered amount (box or kg? In old logic it was kg)
-                
-                # WARNING: Previously we stored 'quantity' as the result of calculation. 
-                # If we switch to Boxes, we need to know what 'quantity' means. 
-                # For backward compatibility, let's assume 'quantity' in Order items is Order Unit Amount.
-                # But to subtract from KG needs, we need KG.
-                # If we start storing boxes, we need to convert back to KG here using package_size.
-                # For now, let's look at how we saved it. In V1 we saved KG as quantity. 
-                # So we can just sum it up. 
-                
+                # Item structure in JSON: {'product_id': 'uuid_str', 'quantity': 5.0, ...}
                 if p_id_str:
                     p_uuid = uuid.UUID(p_id_str)
                     if p_uuid not in transit_map:
                         transit_map[p_uuid] = 0.0
-                    transit_map[p_uuid] += qty
+                    
+                    # Use 'quantity_kg' if available, fallback to 'quantity'
+                    q_kg = float(item.get('quantity_kg', item.get('quantity', 0.0)))
+                    transit_map[p_uuid] += q_kg
 
         # --- 2. Calculate Final Order ---
+        
+        # Determine effective Safety Stock
+        ss_ratio = safety_stock if safety_stock is not None else settings.SAFETY_STOCK_RATIO
         
         items = []
         for p_id, raw_need in ingredient_needs.items():
@@ -129,7 +125,7 @@ class CalculationEngineV2:
             product = products_map[p_id]
             
             # A. Safety Stock
-            need_with_safety = raw_need * settings.SAFETY_STOCK_RATIO
+            need_with_safety = raw_need * ss_ratio
             
             # B. Subtract Assets
             current_stock = stocks.get(p_id, 0.0)
@@ -158,23 +154,44 @@ class CalculationEngineV2:
                 final_order_qty = round(net_need_kg, 2)
             
             if final_order_qty > 0:
+                # Calculate what this order represents in KG for future transit checks
+                ordered_kg = final_order_qty * package_size if package_size > 0 else final_order_qty
+
                 items.append({
                     "product_id": str(p_id),
                     "product_name": product.name_ru,
                     "product_name_vn": product.name_vn,
                     "unit": order_unit,
-                    "quantity": final_order_qty, # This is potentially Boxes now
+                    "quantity": final_order_qty, # Boxes or KG
+                    "quantity_kg": round(ordered_kg, 4), # Always KG
                     
                     # Extended Info for UI/Debug
                     "predicted_usage": round(raw_need, 2),
                     "safety_usage_kg": round(need_with_safety, 2),
                     "stock": current_stock,
                     "transit_kg": transit_qty,
-                    "formatted_transit": f"{transit_qty:.2f} {product.unit} (in 24h)",
+                    "formatted_transit": f"{transit_qty:.2f} {product.unit} (in transit)",
                     
                     # Add image placeholder
                     "image_url": f"https://placehold.co/150?text={product.name_ru.replace(' ', '+')[:20]}"
                 })
         
         logger.info(f"Calculation finished. Generated {len(items)} items.")
-        return items
+        
+        # New Return Structure: (Items, DishBreakdown)
+        # DishBreakdown: List[Dict] with details about what dishes contributed to the plan
+        dish_breakdown = []
+        for d_id_str, qty in dish_needs.items():
+            # Find dish name if possible. We have tech_cards but not direct Dish objects here efficiently.
+            # We can map from iiko_dish_id to name via TechCard or Mix.
+            # Mix has 'iiko_dish_id' but maybe no name. TechCard has iiko_dish_id.
+            # For visualization, we simply pass ID and Qty.
+            # Better: Fetch Dish names in Step 1.2 or 1.1 if available.
+            
+            dish_breakdown.append({
+                "iiko_dish_id": d_id_str,
+                "quantity": round(qty, 2),
+                "plan_revenue": round((qty / ml_multiplier) * 1000 if ml_multiplier > 0 else 0, 2) # Reverse engineering approximate revenue part? Or just use probability.
+            })
+
+        return items, dish_breakdown

@@ -55,12 +55,15 @@ const updateQuantity = (event) => {
 
     <!-- Comment Input (Visible ONLY if changed) -->
     <div v-if="isChanged" class="mt-3 pt-3 border-t border-blue-100 anim-slide-down">
-        <label class="block text-xs font-semibold text-blue-600 mb-1">Причина изменения / Reason:</label>
+        <div class="flex justify-between items-center mb-1">
+            <label class="block text-xs font-semibold text-blue-600">Причина изменения / Reason:</label>
+            <span class="text-xs text-gray-500 font-medium">План: {{ initialQuantity }} {{ item.unit }}</span>
+        </div>
         <input 
             type="text" 
             :value="item.comment || ''"
             @input="$emit('update:comment', item.id, $event.target.value)"
-            placeholder="Например: Плохое качество / Wrong quality"
+            placeholder="Например/Example: 'На складе 5 кг' (In stock 5kg)"
             class="w-full px-3 py-2 text-sm border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
         />
     </div>

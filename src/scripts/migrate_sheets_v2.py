@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 async def migrate_sheets():
     logger.info("🚀 Starting Sheets Migration (Adding System IDs)...")
     
-    sheets = SheetsClient()
+    sheets = SheetsClient(settings.GOOGLE_SHEETS_SPREADSHEET_ID)
     
     # Setup DB
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

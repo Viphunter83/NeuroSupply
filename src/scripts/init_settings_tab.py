@@ -30,7 +30,7 @@ def parse_orgs_list(file_path: str) -> List[Dict[str, str]]:
 
 def main():
     logger.info("Initializing Settings Tab...")
-    client = SheetsClient()
+    client = SheetsClient(settings.GOOGLE_SHEETS_SPREADSHEET_ID)
     
     # 1. Parse Orgs
     orgs = parse_orgs_list("orgs_list.txt")

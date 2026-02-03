@@ -22,100 +22,99 @@ from src.services.calculation.engine_v2 import CalculationEngineV2
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-async def run_calc():
-    logger.info("Starting Daily Calculation...")
-    
-    sheets = SheetsClient()
-    
-    # Get Today's Plan
-    today_str = datetime.now().strftime("%d.%m.%Y")
-    logger.info(f"Fetching Plan for {today_str}...")
-    
-    sales_plan_rub = sheets.get_plan_for_date(today_str)
-    
-    if sales_plan_rub <= 0:
-        logger.warning(f"No plan found for {today_str} in '2. ПЛАН ПРОДАЖ 📅'. Using fallback 50000.")
-        sales_plan_rub = 50000.0
-    else:
-        logger.info(f"✅ Found Daily Plan: {sales_plan_rub} RUB")
 
-    async_session = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
-    
-    async with async_session() as session:
+async def run_calc_for_restaurant(restaurant_id: uuid.UUID, sales_plan_override: float = None):
+    """
+    Runs calculation for a specific restaurant.
+    If sales_plan_override is not provided, tries to fetch from its Sheet.
+    """
+    async with AsyncSession(engine, expire_on_commit=False) as session:
         # 1. Get Restaurant
-        # Dynamic ID from Sheets
-        org_id = sheets.get_active_restaurant_id()
-        if not org_id:
-            logger.error("No Active Restaurant ID found.")
+        restaurant = await session.get(Restaurant, restaurant_id)
+        if not restaurant or not restaurant.spreadsheet_id:
+            logger.error(f"Restaurant {restaurant_id} not found or missing spreadsheet_id.")
             return
 
-        res = await session.execute(select(Restaurant).where(Restaurant.iiko_id == org_id))
-        restaurant = res.scalar_one_or_none()
+        logger.info(f"--- [Calculation] {restaurant.name} ---")
+        sheets = SheetsClient(restaurant.spreadsheet_id)
         
-        if not restaurant:
-            # Fallback
-            res = await session.execute(select(Restaurant).limit(1))
-            restaurant = res.scalar_one_or_none()
-        
-        if not restaurant:
-            logger.error("No restaurant found.")
-            return
+        # 2. Get Today's Plan
+        sales_plan_rub = sales_plan_override
+        if not sales_plan_rub:
+            today_str = datetime.now().strftime("%d.%m.%Y")
+            sales_plan_rub = sheets.get_plan_for_date(today_str)
+            
+            if sales_plan_rub <= 0:
+                logger.warning(f"No plan found for {today_str}. Using fallback 50000.")
+                sales_plan_rub = 50000.0
 
-        rest_id = restaurant.id
-        logger.info(f"Restaurant: {restaurant.name}")
-
-        # 2. Plan is already fetched above
-
-        
-        # 3. Calculate Draft Order (Ingredients)
+        # 3. Generate Draft Order
         svc = OrderService(session)
-        # This calculates ingredients and saves Order to DB
-        order = await svc.generate_draft_order(rest_id, sales_plan_rub)
-        logger.info(f"Draft Order Generated: {order.id}")
+        order = await svc.generate_draft_order(restaurant.id, sales_plan_rub)
+        logger.info(f"✅ Draft Order Generated: {order.id}")
         
-        # 4. Calculate Dish Needs (for Tab 2a)
-        # Fetch Mix
-        stmt = select(ProductMix).where(ProductMix.restaurant_id == rest_id)
+        # 4. Update Dish Calculation Tab (2a)
+        # Fetch Mix for display
+        stmt = select(ProductMix).where(ProductMix.restaurant_id == restaurant.id)
         mixes = (await session.execute(stmt)).scalars().all()
         
         calc_rows = []
-        
         # Fetch Products to get names
-        dish_ids = [uuid.UUID(pm.iiko_dish_id) for pm in mixes]
+        dish_ids = [uuid.UUID(pm.iiko_dish_id) for pm in mixes if pm.iiko_dish_id]
+        p_map = {}
         if dish_ids:
             p_stmt = select(Product).where(Product.id.in_(dish_ids))
             products = (await session.execute(p_stmt)).scalars().all()
             p_map = {str(p.id): p for p in products}
-        else:
-            p_map = {}
 
-        total_qty = 0
         for pm in mixes:
-            # Probability is Qty Factor (Qty per 1000 RUB)
             factor = float(pm.probability)
             qty = (sales_plan_rub / 1000.0) * factor
-            
-            dish_id_str = str(pm.iiko_dish_id)
-            dish = p_map.get(dish_id_str)
+            dish = p_map.get(str(pm.iiko_dish_id))
             name = dish.name_ru if dish else "Unknown"
-            
-            # Columns: Dish, Plan, Factor, Calc Qty
             calc_rows.append([name, sales_plan_rub, factor, round(qty, 2)])
-            total_qty += qty
         
-        # 5. Update Sheet Tab 2a
-        # '2a. РАСЧЕТ БЛЮД 🍳'
-        logger.info(f"Updating '2a. РАСЧЕТ БЛЮД 🍳' with {len(calc_rows)} rows...")
-        header = ["Блюдо", "План (Руб)", "К-во на 1000р", "Расчет (шт)"]
-        
-        # Clear range logic inside sheets client or just update
-        # We use update_worksheet which overwrites
+        # 5. Write to Sheet
         sheets.clear_worksheet("2а. РАСЧЕТ БЛЮД 🍳")
-        sheets.update_worksheet("2а. РАСЧЕТ БЛЮД 🍳", [header] + calc_rows)
+        sheets.update_worksheet("2а. РАСЧЕТ БЛЮД 🍳", [["Блюдо", "План (Руб)", "К-во на 1000р", "Расчет (шт)"]] + calc_rows)
+        logger.info("Sheet updated.")
+
+async def run_calc():
+    """
+    Main entry point for scheduler. Processes all restaurants.
+    """
+    logger.info("🚀 Starting global order calculation for all restaurants...")
+    async with AsyncSession(engine, expire_on_commit=False) as session:
+        stmt = select(Restaurant).where(Restaurant.spreadsheet_id != None)
+        result = await session.execute(stmt)
+        restaurants = result.scalars().all()
         
-        logger.info("Done!")
+        for rest in restaurants:
+            try:
+                await run_calc_for_restaurant(rest.id)
+            except Exception as e:
+                logger.error(f"Failed calc for {rest.name}: {e}")
+    
+    logger.info("✅ Global calculation completed.")
+
+async def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Run Order Calculation")
+    parser.add_argument("--restaurant-id", type=str, help="UUID of the restaurant")
+    parser.add_argument("--all", action="store_true", help="Run for all restaurants")
+    
+    args = parser.parse_args()
+    
+    if args.all:
+        await run_calc()
+    elif args.restaurant_id:
+        try:
+            r_id = uuid.UUID(args.restaurant_id)
+            await run_calc_for_restaurant(r_id)
+        except ValueError:
+            logger.error("Invalid UUID format.")
+    else:
+        parser.print_help()
 
     await engine.dispose()
 

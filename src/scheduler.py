@@ -5,8 +5,9 @@ import logging
 from datetime import datetime
 import asyncio
 
-# Import your task
+# Import your tasks
 from src.scripts.run_calc import run_calc
+from src.scripts.sync_sheet_to_db import sync_all_restaurants
 
 from src.services.notification import NotificationService
 
@@ -14,15 +15,27 @@ logger = logging.getLogger(__name__)
 
 scheduler = AsyncIOScheduler()
 
-async def job_wrapper():
+async def sync_job_wrapper():
+    """
+    Syncs master data from Sheets at 04:00 AM.
+    """
+    logger.info(f"⏰ [Scheduler] Starting Sync Job at {datetime.now()}")
+    try:
+        await sync_all_restaurants()
+        logger.info("✅ [Scheduler] Sync Job Completed")
+    except Exception as e:
+        logger.error(f"❌ [Scheduler] Sync Job Failed: {e}", exc_info=True)
+
+async def calc_job_wrapper():
     """
     Wraps the existing run_calc task to handle errors 
     and log execution.
+    Runs at 06:00 AM.
     """
-    logger.info(f"⏰ [Scheduler] Starting Daily Job at {datetime.now()}")
+    logger.info(f"⏰ [Scheduler] Starting Calculation Job at {datetime.now()}")
     try:
         await run_calc()
-        logger.info("✅ [Scheduler] Daily Job Completed Successfully")
+        logger.info("✅ [Scheduler] Calculation Job Completed Successfully")
         
         # Notify Users
         notifier = NotificationService()
@@ -30,25 +43,32 @@ async def job_wrapper():
         logger.info("🔔 [Scheduler] Notifications Sent")
         
     except Exception as e:
-        logger.error(f"❌ [Scheduler] Job Failed: {e}", exc_info=True)
+        logger.error(f"❌ [Scheduler] Calculation Job Failed: {e}", exc_info=True)
 
 def start_scheduler():
     """
     Configures and starts the scheduler.
     """
-    # Schedule logic: Every day at 06:00
-    trigger = CronTrigger(hour=6, minute=0)
-    
-    # Add Job
+    # 1. Sync Job: Every day at 04:00
+    sync_trigger = CronTrigger(hour=4, minute=0)
     scheduler.add_job(
-        job_wrapper, 
-        trigger=trigger, 
+        sync_job_wrapper, 
+        trigger=sync_trigger, 
+        id="daily_sync", 
+        replace_existing=True
+    )
+    
+    # 2. Calculation Job: Every day at 06:00
+    calc_trigger = CronTrigger(hour=6, minute=0)
+    scheduler.add_job(
+        calc_job_wrapper, 
+        trigger=calc_trigger, 
         id="daily_calc", 
         replace_existing=True
     )
     
     scheduler.start()
-    logger.info("🚀 Scheduler started. Jobs configured: ['daily_calc' at 06:00]")
+    logger.info("🚀 Scheduler started. Jobs: [daily_sync at 04:00, daily_calc at 06:00]")
 
 def shutdown_scheduler():
     logger.info("🛑 Stopping Scheduler...")

@@ -13,12 +13,12 @@ def run_sync():
     print(f"Credentials Path: {settings.GOOGLE_SHEETS_CREDENTIALS_PATH}")
     print(f"Spreadsheet ID: {settings.GOOGLE_SHEETS_SPREADSHEET_ID}")
     
-    client = SheetsClient()
+    sheets = SheetsClient(settings.GOOGLE_SHEETS_SPREADSHEET_ID)
     print("✅ Client initialized.")
 
     print("\n--- 2. CONNECTION TEST (Reading '2. ПЛАН ПРОДАЖ 📅') ---")
     try:
-        sheet = client.client.open_by_key(client.sheet_id)
+        sheet = sheets.client.open_by_key(sheets.sheet_id)
         sales_ws = sheet.worksheet("2. ПЛАН ПРОДАЖ 📅")
         sales_data = sales_ws.get_all_values()
         if len(sales_data) > 1:
