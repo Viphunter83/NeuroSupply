@@ -1,17 +1,22 @@
 
+import asyncio
 import logging
-from typing import Optional, List
 import uuid
+from datetime import datetime, timezone
+from typing import Optional, List
 from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+
 from fastapi import HTTPException
-import io
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, Border, Side
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+import io
 
-from src.db.models import Order, OrderStatus, Restaurant
+from src.db.models import Order, OrderStatus, Restaurant, Product
+from src.db.models.analytics import Anomalies
 from src.schemas.order import OrderResponse
+from src.services.data_loader.sheets_client import SheetsClient
 
 logger = logging.getLogger(__name__)
 
@@ -76,16 +81,18 @@ class OrderService:
         output.seek(0)
         return output
 
-    async def get_latest_draft_order(self, restaurant_id: UUID) -> Optional[Order]:
+    async def get_active_order(self, restaurant_id: UUID) -> Optional[Order]:
         """
-        Fetch the latest order with status DRAFT for a specific restaurant.
+        Fetch the latest active order (DRAFT or VERIFIED_BY_COOK) 
+        for a specific restaurant created TODAY.
         """
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         stmt = (
             select(Order)
             .where(
                 Order.restaurant_id == restaurant_id,
-                # In real app, we might also filter by status if we strictly want DRAFT
-                 Order.status == OrderStatus.DRAFT
+                Order.status.in_([OrderStatus.DRAFT, OrderStatus.VERIFIED_BY_COOK]),
+                Order.created_at >= today_start
             )
             .order_by(Order.created_at.desc())
             .limit(1)
@@ -116,6 +123,31 @@ class OrderService:
         logger.info(f"Order {order_id} confirmed (VERIFIED_BY_COOK).")
         return order
 
+    async def approve_order(self, order_id: UUID) -> Order:
+        """
+        Approve an order by changing its status to APPROVED_BY_MANAGER.
+        """
+        stmt = select(Order).where(Order.id == order_id)
+        result = await self.db.execute(stmt)
+        order = result.scalar_one_or_none()
+
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+
+        # Validation: only Verified orders can be approved
+        if order.status != OrderStatus.VERIFIED_BY_COOK:
+             logger.warning(f"Order {order_id} is in state {order.status}, expecting VERIFIED_BY_COOK")
+             if order.status == OrderStatus.APPROVED_BY_MANAGER:
+                 return order
+             raise HTTPException(status_code=400, detail=f"Cannot approve order in {order.status} state")
+
+        order.status = OrderStatus.APPROVED_BY_MANAGER
+        await self.db.commit()
+        await self.db.refresh(order)
+        
+        logger.info(f"Order {order_id} approved (APPROVED_BY_MANAGER).")
+        return order
+
 
     async def _export_draft_to_sheet(self, restaurant_id: UUID, items: List[dict]):
         """Helper to export draft to sheet safely."""
@@ -125,12 +157,7 @@ class OrderService:
             restaurant = result.scalar_one_or_none()
             
             if restaurant and restaurant.spreadsheet_id:
-                from src.services.data_loader.sheets_client import SheetsClient
                 client = SheetsClient(restaurant.spreadsheet_id)
-                # Run in executor if sync, but gspread is sync, so we might block slightly. 
-                # For now direct call is acceptable for MVP.
-                # Ideally: await run_in_executor(...)
-                import asyncio
                 loop = asyncio.get_running_loop()
                 await loop.run_in_executor(None, client.write_draft_order, items)
                 logger.info(f"Exported draft order to sheet for {restaurant.name}")
@@ -153,9 +180,7 @@ class OrderService:
         calc_settings = {}
         if restaurant and restaurant.spreadsheet_id:
             try:
-                from src.services.data_loader.sheets_client import SheetsClient
                 client = SheetsClient(restaurant.spreadsheet_id)
-                import asyncio
                 loop = asyncio.get_running_loop()
                 # Run in executor to avoid blocking main thread
                 calc_settings = await loop.run_in_executor(None, client.fetch_settings)
@@ -205,9 +230,7 @@ class OrderService:
             restaurant = result.scalar_one_or_none()
             
             if restaurant and restaurant.spreadsheet_id:
-                from src.services.data_loader.sheets_client import SheetsClient
                 client = SheetsClient(restaurant.spreadsheet_id)
-                import asyncio
                 loop = asyncio.get_running_loop()
                 await loop.run_in_executor(None, client.write_dish_calculation, dishes)
                 logger.info(f"Exported dish calculation for {restaurant.name}")
@@ -229,11 +252,6 @@ class OrderService:
              raise HTTPException(status_code=400, detail="Cannot update confirmed order")
 
         # Logic to detect anomalies (compare old vs new)
-        # For simplicity, we just save the new items.
-        # But we should log to Anomalies table if quantity differs significantly.
-        # Let's map old items by product_id
-        from src.db.models.analytics import Anomalies
-        from src.db.models import Product
         
         # Pre-fetch products for all items to get package_size
         p_ids = [uuid.UUID(item.get('product_id')) for item in new_items if item.get('product_id')]
@@ -263,26 +281,28 @@ class OrderService:
                     # Check if reason provided in item
                     reason = new_item.get('reason', "Manual update via API")
                     
-                    anomaly = Anomalies(
-                        order_id=order.id,
-                        product_id=uuid.UUID(p_id),
-                        auto_qty=old_qty,
-                        manual_qty=new_qty,
-                        reason=reason
-                    )
-                    self.db.add(anomaly)
+                    if p_id in p_map:
+                        anomaly = Anomalies(
+                            order_id=order.id,
+                            product_id=p_id,
+                            auto_qty=old_qty,
+                            manual_qty=new_qty,
+                            reason=reason
+                        )
+                        self.db.add(anomaly)
             else:
                  # New item added?
                  # Treat as anomaly from 0 to New Qty
                  reason = new_item.get('reason', "Manual addition via API")
-                 anomaly = Anomalies(
-                     order_id=order.id,
-                     product_id=uuid.UUID(p_id),
-                     auto_qty=0.0,
-                     manual_qty=new_qty,
-                     reason=reason
-                 )
-                 self.db.add(anomaly)
+                 if p_id in p_map:
+                     anomaly = Anomalies(
+                         order_id=order.id,
+                         product_id=p_id,
+                         auto_qty=0.0,
+                         manual_qty=new_qty,
+                         reason=reason
+                     )
+                     self.db.add(anomaly)
 
         order.items = new_items
         await self.db.commit()

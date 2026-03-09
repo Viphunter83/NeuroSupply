@@ -1,6 +1,6 @@
 from .base import Base
 from .restaurant import Restaurant
-from .product import Product, TechCard, StockBalance
+from .product import Product, TechCard, StockBalance, EmpiricalRecipe
 from .order import Order, SalesPlan, OrderStatus
 from .user import User, UserRole
-from .analytics import ProductMix, Anomalies
+from .analytics import ProductMix, Anomalies, SalesFact

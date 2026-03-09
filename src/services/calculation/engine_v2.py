@@ -1,14 +1,14 @@
 import logging
 import uuid
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
-from src.db.models import ProductMix, TechCard, Product, StockBalance, Order, OrderStatus
+from src.db.models import ProductMix, EmpiricalRecipe, Product, StockBalance, Order, OrderStatus
 from src.services.ml.forecast_service import ForecastService
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ class CalculationEngineV2:
 
         if not mixes:
             logger.warning("No ProductMix found. Returning empty list.")
-            return []
+            return [], []
 
         # 1.2 Tech Cards
         # Calculate Dish Quantities first to filter TechCards
@@ -52,27 +52,51 @@ class CalculationEngineV2:
             qty = (sales_plan_rub / 1000.0) * float(pm.probability) * ml_multiplier
             dish_needs[str(pm.iiko_dish_id)] = qty
 
-        dish_ids = [uuid.UUID(d_id) for d_id in dish_needs.keys()]
+        dish_ids = []
+        dish_names = []
+        for d_id_str in dish_needs.keys():
+            try:
+                dish_ids.append(uuid.UUID(d_id_str))
+            except ValueError:
+                dish_names.append(d_id_str)
         
-        stmt_tc = select(TechCard).where(TechCard.iiko_dish_id.in_(dish_ids))
-        result_tc = await self.db.execute(stmt_tc)
-        tech_cards = result_tc.scalars().all()
+        # Filter recipes at SQL level instead of loading all into memory
+        conditions = []
+        if dish_ids:
+            conditions.append(EmpiricalRecipe.dish_id.in_(dish_ids))
+        if dish_names:
+            conditions.append(EmpiricalRecipe.dish_name.in_(dish_names))
+        
+        if conditions:
+            from sqlalchemy import or_
+            stmt_recipe = select(EmpiricalRecipe).where(or_(*conditions))
+            result_recipe = await self.db.execute(stmt_recipe)
+            empirical_recipes = result_recipe.scalars().all()
+        else:
+            empirical_recipes = []
 
         # 1.3 Calculate Raw Ingredient Needs
         ingredient_needs: Dict[uuid.UUID, float] = {}
-        for tc in tech_cards:
-            dish_id_str = str(tc.iiko_dish_id)
-            if dish_id_str in dish_needs:
-                dish_qty = dish_needs[dish_id_str]
-                ingredient_qty = dish_qty * float(tc.gross_amount)
+        unmapped_needs: Dict[str, float] = {}
+
+        for recipe in empirical_recipes:
+            dish_key = str(recipe.dish_id) if recipe.dish_id and str(recipe.dish_id) in dish_needs else recipe.dish_name
+            if dish_key in dish_needs:
+                dish_qty = dish_needs[dish_key]
+                ingredient_qty = dish_qty * float(recipe.yield_rate)
                 
-                if tc.product_id not in ingredient_needs:
-                    ingredient_needs[tc.product_id] = 0.0
-                ingredient_needs[tc.product_id] += ingredient_qty
+                if recipe.product_id:
+                    if recipe.product_id not in ingredient_needs:
+                        ingredient_needs[recipe.product_id] = 0.0
+                    ingredient_needs[recipe.product_id] += ingredient_qty
+                else:
+                    if recipe.ingredient_name not in unmapped_needs:
+                        unmapped_needs[recipe.ingredient_name] = 0.0
+                    unmapped_needs[recipe.ingredient_name] += ingredient_qty
 
         prod_ids = list(ingredient_needs.keys())
-        if not prod_ids:
-            return []
+        if not prod_ids and not unmapped_needs:
+            return [], []
 
         # 1.4 Fetch Products details
         stmt_prods = select(Product).where(Product.id.in_(prod_ids))
@@ -89,7 +113,7 @@ class CalculationEngineV2:
 
         # 1.6 Fetch Transit (Last 24h Verified Orders)
         # We assume "In Transit" = Verified but not yet delivered (approx 24h window)
-        last_verified_cutoff = datetime.utcnow() - timedelta(hours=24 + (days_in_transit * 24))
+        last_verified_cutoff = datetime.now(timezone.utc) - timedelta(hours=24 + (days_in_transit * 24))
         stmt_transit = select(Order).where(
             Order.restaurant_id == restaurant_id,
             Order.status.in_([OrderStatus.VERIFIED_BY_COOK, OrderStatus.EXPORTED_TO_PROCOB]),
@@ -176,6 +200,24 @@ class CalculationEngineV2:
                     "image_url": f"https://placehold.co/150?text={product.name_ru.replace(' ', '+')[:20]}"
                 })
         
+        # Append unmapped needs directly (useful for tracking things not in DB but existing in iiko)
+        for ingr_name, raw_need in unmapped_needs.items():
+            need_with_safety = raw_need * ss_ratio
+            items.append({
+                "product_id": str(uuid.uuid5(uuid.NAMESPACE_DNS, ingr_name)),  # Deterministic ID for same ingredient
+                "product_name": f"{ingr_name} (Не привязан)",
+                "product_name_vn": "",
+                "unit": "кг",
+                "quantity": round(need_with_safety, 2),
+                "quantity_kg": round(need_with_safety, 4),
+                "predicted_usage": round(raw_need, 2),
+                "safety_usage_kg": round(need_with_safety, 2),
+                "stock": 0.0,
+                "transit_kg": 0.0,
+                "formatted_transit": "0.0 кг",
+                "image_url": "https://placehold.co/150?text=Unmapped"
+            })
+            
         logger.info(f"Calculation finished. Generated {len(items)} items.")
         
         # New Return Structure: (Items, DishBreakdown)

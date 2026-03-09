@@ -4,17 +4,25 @@ import OrderCard from './OrderCard.vue';
 import SuccessScreen from './SuccessScreen.vue';
 
 const props = defineProps({
-  restaurantId: String
+  restaurantId: String,
+  isManager: Boolean
 });
 
 const items = ref([]);
 const orderId = ref(null);
+const orderStatus = ref(null); // Save status from backend
 const loading = ref(true);
 const error = ref(null);
 const isSuccess = ref(false);
+const isDone = ref(false);
 const activeRestaurantId = ref(null);
 
-// Get query params
+// Extra Items Modal State
+const isExtraModalOpen = ref(false);
+const extraItems = ref([]);
+const extraSearchQuery = ref('');
+const isExtraLoading = ref(false);
+
 const getQueryParams = () => {
     const params = new URLSearchParams(window.location.search);
     return params.get('restaurant_id');
@@ -22,21 +30,45 @@ const getQueryParams = () => {
 
 const fetchOrder = async () => {
     const rId = props.restaurantId || getQueryParams();
-    // Fallback ID for testing if not in URL 
-    const finalId = rId || 'f2c046ab-4068-4794-b6e1-e41045f9ea31'; // Default Test ID
-    activeRestaurantId.value = finalId;
+    if (!rId) {
+        error.value = 'Не указан restaurant_id. Откройте приложение через Telegram.';
+        loading.value = false;
+        return;
+    }
+    activeRestaurantId.value = rId;
 
     try {
-        const response = await fetch(`/api/v1/order/latest?restaurant_id=${finalId}`);
+        const response = await fetch(`/api/v1/order/latest?restaurant_id=${rId}`);
+        if (response.status === 404) {
+            isDone.value = true;
+            loading.value = false;
+            return;
+        }
         if (!response.ok) throw new Error('Failed to fetch order');
         const data = await response.json();
         
         orderId.value = data.id;
+        orderStatus.value = data.status;
+
+        // If cook opens verified order, show success/waiting screen
+        if (!props.isManager && data.status === 'verified_by_cook') {
+            isSuccess.value = true;
+            loading.value = false;
+            return;
+        }
+
+        // If order is already approved, show done screen
+        if (data.status === 'approved_by_manager' || data.status === 'exported_to_procob') {
+            isDone.value = true;
+            loading.value = false;
+            return;
+        }
+
         items.value = data.items.map(i => ({
              ...i,
              id: i.product_id, // Map product_id to id for local usage
-             quantity: i.quantity,
-             original_quantity: i.quantity // Store explicit original
+             original_quantity: parseFloat(i.quantity),
+             original_stock: parseFloat(i.stock)
         }));
     } catch (e) {
         error.value = e.message;
@@ -45,10 +77,10 @@ const fetchOrder = async () => {
     }
 };
 
-const handleQuantityUpdate = (productId, newQty) => {
+const handleStockUpdate = (productId, newStock) => {
     const item = items.value.find(i => i.id === productId);
     if (item) {
-        item.quantity = newQty;
+        item.stock = newStock;
     }
 };
 
@@ -62,9 +94,25 @@ const handleCommentUpdate = (productId, comment) => {
 const submitOrder = async () => {
     if (!orderId.value) return;
 
+    // IF MANAGER -> APPROVE FLOW
+    if (props.isManager && orderStatus.value === 'verified_by_cook') {
+        try {
+            const response = await fetch(`/api/v1/order/${orderId.value}/approve`, {
+                method: 'POST'
+            });
+            if (!response.ok) throw new Error('Failed to approve');
+            isSuccess.value = true;
+            return;
+        } catch (e) {
+            alert('Error approving: ' + e.message);
+            return;
+        }
+    }
+
+    // IF COOK/DRAFT -> CONFIRM FLOW
     // Validation: Check for changed items without comments
     const invalidItems = items.value.filter(i => {
-        const isChanged = i.quantity !== i.original_quantity;
+        const isChanged = i.stock !== i.original_stock;
         const comment = (i.comment || '').trim();
         return isChanged && !comment;
     });
@@ -74,29 +122,24 @@ const submitOrder = async () => {
         return;
     }
     
-    // In a real app we would send the updated items back.
-    // The current backend endpoint confirms "as is" or we need to update items first?
-    // The user requirement: "POST /api/v1/order/{id}/confirm".
-    // It implies we just confirm. But if we changed quantities, we should probably update the order first?
-    // MVP: Just confirm (and assume basic flow). 
-    // Wait, requirement said: "Если повар меняет число...".
-    // If backend only confirms, then changes are LOST.
-    // But for this iteration task, let's stick to the requested endpoints.
     try {
         // 1. Save changes (PUT)
-        // We need to send full items list as per schema
         const payload = {
-            items: items.value.map(i => ({
-                product_id: i.product_id,
-                product_name: i.product_name,
-                product_name_vn: i.product_name_vn,
-                image_url: i.image_url,
-                unit: i.unit,
-                quantity: parseFloat(i.quantity),
-                predicted_usage: i.predicted_usage,
-                stock: i.stock,
-                comment: i.comment || null
-            }))
+            items: items.value.map(i => {
+                const stockDiff = i.original_stock - i.stock;
+                const newQuantity = Math.max(0, i.original_quantity + stockDiff);
+                return {
+                    product_id: i.product_id,
+                    product_name: i.product_name,
+                    product_name_vn: i.product_name_vn,
+                    image_url: i.image_url,
+                    unit: i.unit,
+                    quantity: newQuantity,
+                    predicted_usage: i.predicted_usage,
+                    stock: i.stock,
+                    comment: i.comment || null
+                };
+            })
         };
 
         const updateResponse = await fetch(`/api/v1/order/${orderId.value}`, {
@@ -118,6 +161,68 @@ const submitOrder = async () => {
     }
 };
 
+let extraSearchTimeout = null;
+const fetchExtraItems = async () => {
+    isExtraLoading.value = true;
+    try {
+        const query = extraSearchQuery.value ? `?q=${encodeURIComponent(extraSearchQuery.value)}` : '';
+        const response = await fetch(`/api/v1/products/extra${query}`);
+        if (!response.ok) throw new Error('Failed to fetch extra products');
+        extraItems.value = await response.json();
+    } catch (e) {
+        console.error(e);
+    } finally {
+        isExtraLoading.value = false;
+    }
+};
+
+const handleExtraSearchInput = () => {
+    clearTimeout(extraSearchTimeout);
+    extraSearchTimeout = setTimeout(() => {
+        fetchExtraItems();
+    }, 300);
+};
+
+const openExtraModal = () => {
+    isExtraModalOpen.value = true;
+    if (extraItems.value.length === 0) {
+        fetchExtraItems();
+    }
+};
+
+const closeExtraModal = () => {
+    isExtraModalOpen.value = false;
+};
+
+const addExtraItem = (extraItem) => {
+    // Check if already added
+    const existing = items.value.find(i => i.id === extraItem.product_id);
+    if (existing) {
+        alert('Этот товар уже есть в списке.');
+        return;
+    }
+    
+    // Append to main items list as anomaly (0 predicted, 0 stock initially)
+    items.value.push({
+        id: extraItem.product_id,
+        product_id: extraItem.product_id,
+        product_name: extraItem.product_name,
+        product_name_vn: extraItem.product_name_vn,
+        image_url: null,
+        unit: extraItem.unit,
+        quantity: 0,
+        predicted_usage: 0,
+        stock: 0,
+        original_stock: 0,
+        original_quantity: 0,
+        comment: ''
+    });
+    
+    closeExtraModal();
+    // Scroll to bottom so they see it
+    setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 100);
+};
+
 onMounted(() => {
     fetchOrder();
 });
@@ -127,10 +232,18 @@ onMounted(() => {
   <div v-if="isSuccess">
       <SuccessScreen :orderId="orderId" />
   </div>
+  <div v-else-if="isDone" class="min-h-screen bg-green-50 flex flex-col items-center justify-center p-6 text-center">
+      <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+      </div>
+      <h2 class="text-2xl font-bold text-green-800 mb-2">Отлично! / Tuyệt vời!</h2>
+      <p class="text-green-600 font-medium">✅ На сегодня заказы и планы посчитаны, отдыхайте!</p>
+      <p class="text-sm text-green-500 mt-2">Đã kiểm kê xong cho hôm nay.</p>
+  </div>
   <div v-else class="min-h-screen bg-gray-50 pb-20">
     <!-- Header -->
     <div class="bg-white p-4 shadow-sm sticky top-0 z-10">
-        <h1 class="text-xl font-bold text-gray-800">Review Order / Kiểm tra</h1>
+        <h1 class="text-xl font-bold text-gray-800">Дневной остаток / Kiểm tra hàng</h1>
         <p class="text-xs text-gray-500">Shop ID: {{ activeRestaurantId ? activeRestaurantId.slice(0,8) + '...' : 'Unknown' }}</p>
     </div>
 
@@ -144,22 +257,96 @@ onMounted(() => {
                 v-for="item in items" 
                 :key="item.id" 
                 :item="item" 
-                :initialQuantity="item.original_quantity"
-                @update:quantity="handleQuantityUpdate"
+                :initialStock="item.original_stock"
+                @update:stock="handleStockUpdate"
                 @update:comment="handleCommentUpdate"
             />
         </div>
     </div>
 
-    <!-- Footer Button -->
-    <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
+    <!-- Footer Buttons -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-10 flex flex-col gap-3">
+        <button 
+            @click="openExtraModal"
+            class="w-full bg-white border-2 border-green-600 outline-none text-green-700 font-bold py-3 rounded-xl text-lg transition-colors flex justify-center items-center gap-2"
+            type="button"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            <span>Доп. заказ / Đặt thêm</span>
+        </button>
         <button 
             @click="submitOrder"
             class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg text-lg transition-colors flex flex-col items-center leading-none"
         >
-            <span>Подтвердить</span>
-            <span class="text-xs opacity-80 font-normal mt-1">Xác nhận</span>
+            <span v-if="isManager && orderStatus === 'verified_by_cook'">Утвердить заказ</span>
+            <span v-else>Подтвердить</span>
+            
+            <span v-if="isManager && orderStatus === 'verified_by_cook'" class="text-xs opacity-80 font-normal mt-1">Phê duyệt đơn hàng</span>
+            <span v-else class="text-xs opacity-80 font-normal mt-1">Xác nhận</span>
         </button>
+    </div>
+
+    <!-- Extra Items Slide-over Modal -->
+    <div v-if="isExtraModalOpen" class="fixed inset-0 z-50 flex justify-end">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" @click="closeExtraModal"></div>
+        
+        <!-- Drawer Panel -->
+        <div class="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-0 rounded-l-2xl">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-4 border-b border-gray-100">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800">Доп. товары</h2>
+                    <p class="text-xs text-gray-500">Hàng ngoài danh sách</p>
+                </div>
+                <button @click="closeExtraModal" class="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Search Input -->
+            <div class="p-4 border-b border-gray-100 bg-gray-50">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                    </div>
+                    <input 
+                        v-model="extraSearchQuery" 
+                        @input="handleExtraSearchInput"
+                        type="text" 
+                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" 
+                        placeholder="Поиск товара / Tìm kiếm..."
+                    >
+                </div>
+            </div>
+
+            <!-- Items List -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                <div v-if="isExtraLoading" class="text-center py-6 text-gray-400">Загрузка...</div>
+                <div v-else-if="extraItems.length === 0" class="text-center py-6 text-gray-400">Ничего не найдено</div>
+                <template v-else>
+                    <div 
+                        v-for="eItem in extraItems" 
+                        :key="eItem.product_id"
+                        class="flex justify-between items-center p-3 border border-gray-100 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow"
+                    >
+                        <div class="flex-1 pr-3">
+                            <h3 class="text-sm font-bold text-gray-800">{{ eItem.product_name }}</h3>
+                            <p v-if="eItem.product_name_vn" class="text-xs text-green-700 font-medium">{{ eItem.product_name_vn }}</p>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-800 mt-1">
+                                {{ eItem.unit }}
+                            </span>
+                        </div>
+                        <button 
+                            @click="addExtraItem(eItem)"
+                            class="flex-shrink-0 w-10 h-10 bg-green-50 text-green-600 rounded-full flex items-center justify-center hover:bg-green-100 transition-colors"
+                        >
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
     </div>
   </div>
 </template>

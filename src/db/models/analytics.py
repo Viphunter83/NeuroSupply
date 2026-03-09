@@ -1,6 +1,7 @@
 import uuid
+from datetime import date, datetime
 from typing import Optional
-from sqlalchemy import String, Integer, ForeignKey, Numeric, Text
+from sqlalchemy import String, Integer, ForeignKey, Numeric, Text, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from .base import Base
@@ -25,6 +26,21 @@ class ProductMix(Base):
     iiko_dish_id: Mapped[str] = mapped_column(String, nullable=True) # If unmapped
     
     probability: Mapped[float] = mapped_column(Numeric(10, 4), nullable=False) # Qty per 1000 RUB
+
+class SalesFact(Base):
+    """
+    Daily sales data per dish from iiko.
+    """
+    __tablename__ = "sales_facts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    restaurant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurants.id"), nullable=False)
+    iiko_dish_id: Mapped[str] = mapped_column(String, nullable=False)
+    dish_name: Mapped[str] = mapped_column(String, nullable=False)
+    
+    date: Mapped[date] = mapped_column(DateTime, nullable=False) # Store date part
+    quantity: Mapped[float] = mapped_column(Numeric(10, 4), nullable=False)
+    revenue_rub: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
 
 class Anomalies(Base):
     """

@@ -44,9 +44,21 @@ async def run_calc_for_restaurant(restaurant_id: uuid.UUID, sales_plan_override:
             today_str = datetime.now().strftime("%d.%m.%Y")
             sales_plan_rub = sheets.get_plan_for_date(today_str)
             
+            # Fallback: try SalesPlan from DB
             if sales_plan_rub <= 0:
-                logger.warning(f"No plan found for {today_str}. Using fallback 50000.")
-                sales_plan_rub = 50000.0
+                from src.db.models import SalesPlan
+                from datetime import date
+                plan_stmt = select(SalesPlan).where(
+                    SalesPlan.restaurant_id == restaurant_id,
+                    SalesPlan.date == date.today()
+                )
+                plan_res = await session.execute(plan_stmt)
+                plan = plan_res.scalar_one_or_none()
+                sales_plan_rub = float(plan.amount_rub) if plan else 0.0
+            
+            if sales_plan_rub <= 0:
+                logger.warning(f"⚠️ No sales plan for {today_str} for {restaurant.name}. Skipping.")
+                return
 
         # 3. Generate Draft Order
         svc = OrderService(session)
@@ -60,7 +72,13 @@ async def run_calc_for_restaurant(restaurant_id: uuid.UUID, sales_plan_override:
         
         calc_rows = []
         # Fetch Products to get names
-        dish_ids = [uuid.UUID(pm.iiko_dish_id) for pm in mixes if pm.iiko_dish_id]
+        dish_ids = []
+        for pm in mixes:
+            if pm.iiko_dish_id:
+                try:
+                    dish_ids.append(uuid.UUID(pm.iiko_dish_id))
+                except ValueError:
+                    continue
         p_map = {}
         if dish_ids:
             p_stmt = select(Product).where(Product.id.in_(dish_ids))

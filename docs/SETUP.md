@@ -17,6 +17,8 @@
 | `POSTGRES_DB` | Имя БД | `neurosupply` |
 | `IIKO_API_LOGIN` | Логин API iikoTransport | `demo_user` |
 | `TELEGRAM_BOT_TOKEN` | Токен от BotFather | `123:ABC...` |
+| `OPENAI_API_KEY` | Ключ для перевода товаров | `sk-...` |
+| `OPENAI_BASE_URL` | Прокси/Base URL для OpenAI | `https://api.proxyapi.ru/v1` |
 
 ## 2. Развертывание в Docker (Production-ready)
 Это самый простой способ запустить систему целиком (БД + API + Бот).
@@ -43,9 +45,12 @@ alembic upgrade head
 Мы подготовили скрипт, загружающий данные из Excel (папка `data_samples`) и создающий тестовый Ресторан.
 
 ```bash
-# Локально
-export PYTHONPATH=$(pwd)
-./venv/bin/python src/scripts/load_initial_data.py
+# Синхронизация товаров и остатков из iiko RESTO
+docker exec neurosupply_api python3 -m src.scripts.sync_products
+docker exec neurosupply_api python3 -m src.scripts.sync_stock_balances
+
+# Массовый перевод на вьетнамский (ИИ)
+docker exec neurosupply_api python3 -m src.scripts.translate_nomenclature
 ```
 
 ## 5. Проверка Работоспособности
@@ -57,3 +62,5 @@ export PYTHONPATH=$(pwd)
     python src/scripts/verify_engine.py
     ```
 5.  Снова нажмите `/check` в боте. Должен появиться черновик заказа с кнопкой подтверждения.
+6.  **Dashboard:** Откройте в браузере предоставленную ссылку (Cloudflare или localhost:3000). Убедитесь, что отображаются карточки статистики и таблица склада.
+7.  **PWA:** На мобильном устройстве откройте URL в Safari/Chrome и выберите "На экран Домой". Появится иконка NeuroSupply.

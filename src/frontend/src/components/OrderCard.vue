@@ -6,22 +6,22 @@ const props = defineProps({
     type: Object,
     required: true
   },
-  initialQuantity: {
+  initialStock: {
     type: Number,
     required: true
   }
 });
 
-const emit = defineEmits(['update:quantity', 'update:comment']);
+const emit = defineEmits(['update:stock', 'update:comment']);
 
 const isChanged = computed(() => {
-  return props.item.quantity !== props.initialQuantity;
+  return props.item.stock !== props.initialStock;
 });
 
-const updateQuantity = (event) => {
-  const newVal = parseInt(event.target.value);
+const updateStock = (event) => {
+  const newVal = parseFloat(event.target.value);
   if (!isNaN(newVal) && newVal >= 0) {
-    emit('update:quantity', props.item.id, newVal);
+    emit('update:stock', props.item.id, newVal);
   }
 };
 </script>
@@ -38,26 +38,26 @@ const updateQuantity = (event) => {
         <!-- Content -->
         <div class="flex-1">
         <h3 class="font-bold text-gray-800 text-sm leading-tight">{{ item.product_name }}</h3>
-        <p class="text-xs text-gray-500 mt-1">{{ item.unit }}</p>
+        <p class="text-xs text-gray-500 mt-1">Ожидаемо: {{ initialStock }} {{ item.unit }}</p>
         </div>
 
-        <!-- Quantity Input -->
-        <div class="w-16">
+        <!-- Stock Input -->
+        <div class="w-16 flex flex-col items-center">
         <input 
-            type="number" 
-            :value="item.quantity"
-            @input="updateQuantity"
+            type="number" step="0.01"
+            :value="item.stock"
+            @input="updateStock"
             class="w-full text-center border-2 rounded-lg py-2 font-bold text-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             :class="isChanged ? 'bg-white border-blue-400 text-blue-800' : 'bg-gray-50 border-gray-200 text-gray-800'"
         />
+        <span class="text-[0.65rem] text-gray-400 mt-1">Факт.</span>
         </div>
     </div>
 
     <!-- Comment Input (Visible ONLY if changed) -->
     <div v-if="isChanged" class="mt-3 pt-3 border-t border-blue-100 anim-slide-down">
         <div class="flex justify-between items-center mb-1">
-            <label class="block text-xs font-semibold text-blue-600">Причина изменения / Reason:</label>
-            <span class="text-xs text-gray-500 font-medium">План: {{ initialQuantity }} {{ item.unit }}</span>
+            <label class="block text-xs font-semibold text-blue-600">Причина расхождения / Lý do:</label>
         </div>
         <input 
             type="text" 

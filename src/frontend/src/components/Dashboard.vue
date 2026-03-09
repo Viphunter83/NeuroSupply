@@ -5,6 +5,13 @@ import ForecastChart from './ForecastChart.vue';
 import PrepPlanTable from './PrepPlanTable.vue';
 import OrderList from './OrderList.vue';
 
+const props = defineProps({
+    isManager: {
+        type: Boolean,
+        default: false
+    }
+});
+
 // Default Demo ID or from URL
 const getInitialId = () => {
     const params = new URLSearchParams(window.location.search);
@@ -41,7 +48,7 @@ const tab = ref('dashboard'); // 'dashboard' | 'order'
                             :class="tab === 'order' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'"
                             class="px-3 py-2 text-sm font-medium transition-colors"
                         >
-                            Заказ
+                            Заявки
                         </button>
                     </div>
                 </div>
@@ -85,7 +92,7 @@ const tab = ref('dashboard'); // 'dashboard' | 'order'
 
         <!-- Order Tab -->
         <div v-else>
-            <OrderList :restaurantId="restId" />
+            <OrderList :restaurantId="restId" :isManager="props.isManager" />
         </div>
     </main>
   </div>

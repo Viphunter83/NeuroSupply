@@ -7,8 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
 from src.db.session import async_session_maker
-from src.db.models import User, Restaurant
+from src.db.models import User, Restaurant, SalesPlan
 from src.services.calculation.engine_v2 import CalculationEngineV2
+from datetime import datetime
 from aiogram import Bot, types
 from aiogram.types import WebAppInfo
 
@@ -52,7 +53,7 @@ class NotificationService:
             # 3. Send
             logger.info(f"Sending report to {len(users)} users...")
             
-            base_url = settings.WEBAPP_URL or "http://localhost:5173"
+            base_url = settings.WEBAPP_URL or "https://app.neurosupply.ru"
             webapp_url = f"{base_url}?restaurant_id={restaurant_id}"
             kb = [[types.InlineKeyboardButton(text="Open Dashboard 🚀", web_app=WebAppInfo(url=webapp_url))]]
             markup = types.InlineKeyboardMarkup(inline_keyboard=kb)
@@ -79,11 +80,19 @@ class NotificationService:
             if not restaurant:
                 return "Error: Restaurant not found."
             
-            # TODO: Use Real Plan Amount
-            plan_amount = 50000.0 
+            # Fetch Sales Plan for Today
+            today = datetime.now().date()
+            stmt_plan = select(SalesPlan).where(
+                SalesPlan.restaurant_id == restaurant.id,
+                SalesPlan.date == today
+            )
+            res_plan = await db.execute(stmt_plan)
+            sales_plan = res_plan.scalar_one_or_none()
+            
+            plan_amount = float(sales_plan.amount_rub) if sales_plan else 50000.0
             
             engine = CalculationEngineV2(db)
-            results = await engine.calculate_needs(restaurant.id, plan_amount)
+            results, _ = await engine.calculate_needs(restaurant.id, plan_amount)
             
             total_items = sum(r['quantity'] for r in results)
             

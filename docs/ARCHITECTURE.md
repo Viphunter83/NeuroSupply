@@ -1,50 +1,35 @@
-# Техническая архитектура NeuroSupply (v1.2)
+# Техническая архитектура NeuroSupply (v1.3 - Production)
 
-Система NeuroSupply представляет собой модульный Python-сервис, объединяющий расчетную логику, интеграции с внешними SaaS (iiko, Google) и интерфейсы взаимодействия с пользователем.
+Система NeuroSupply представляет собой модульный Python-сервис, объединяющий расчетную логику, интеграции с внешними SaaS (iiko, Google) и современные интерфейсы взаимодействия (Web Dashboard, PWA, Telegram).
 
 ---
 
 ## 🏗 Ключевые компоненты и Интеграции
 
 ### 1. Бэкенд (Core Service)
-Ядро системы, написанное на **FastAPI**.
-*   **Технологии**: Python 3.11, PostgreSQL (SQLAlchemy Async), APScheduler (для ночных задач).
-*   **Логика взаимодействия**:
-    *   **API**: Служит источником данных для Telegram Mini App.
-    *   **Scheduler**: Оркестрирует запуск синхронизации (04:00) и расчета (06:00).
-*   **Пути интеграции**:
-    *   `src/services/calculation/engine_v2.py` — главный «процессор» потребностей.
-    *   `src/services/order_service.py` — управление жизненным циклом заказов и генерация Excel.
+Ядро системы на **FastAPI**.
+*   **Стек**: Python 3.11, PostgreSQL 15, SQLAlchemy, APScheduler.
+*   **Scheduler**: Оркестрирует ночной Pipeline (01:30 - 06:00).
+*   **Расчетный движок**: `src/services/calculation/engine_v2.py` — расчет потребностей.
 
-### 2. Telegram Mini App & Bot
-Фронтенд-интерфейс для линейного персонала.
-*   **Роль**: Единственный инструмент повара для подтверждения заказов.
-*   **Интеграция с Бэкендом**:
-    *   Использует REST API бэкенда для получения списка черновиков.
-    *   Отправляет `PATCH` или `POST` запросы для обновления количеств и подтверждения.
-*   **Пути интеграции**:
-    *   `src/bot/` — логика бота (Aiogram 3).
-    *   `src/api/v1/endpoints/orders.py` — эндпоинты, обслуживающие UI приложения.
+### 2. Веб-дашборд & PWA (Management Layer)
+Основной интерфейс управления и контроля.
+*   **Стек**: Next.js 15+, React, Tailwind CSS 4, shadcn/ui.
+*   **PWA**: Полная поддержка установки на мобильные устройства («ярлык на экран»).
+*   **Путь**: `/web/src/`
 
-### 3. Google Sheets (Control Panel)
-Инструмент для менеджмента и аналитики.
-*   **Роль**: Мастер-система для настроек и ввода планов.
-*   **Взаимодействие с Бэкендом**:
-    *   **Pull (04:00)**: Бэкенд выкачивает настройки (Safety Stock), техкарты и планы продаж.
-    *   **Push (06:00)**: Бэкенд записывает результаты расчета (Draft Order) и декомпозицию блюд (Dish Calc) обратно в таблицу.
-*   **Пути интеграции**:
-    *   `src/services/data_loader/sheets_client.py` — низкоуровневая работа с Google API (gspread).
-    *   `src/scripts/sync_sheet_to_db.py` — скрипт массовой синхронизации данных из таблиц.
+### 3. Telegram Bot & Mini App (Operational Layer)
+Инструмент для линейного персонала (поваров) для инвентаризации и подачи заявок.
+*   **Бот**: Aiogram 3.
+*   **Mini App**: Vue 3.
 
-### 4. iikoCloud (Source System)
-Источник фактических данных по продажам и остаткам.
-*   **Роль**: Поставляет данные о фактических продажах (для обучения AI) и текущих складских остатках.
-*   **Взаимодействие**:
-    *   Использует API v1 (Transport/Cloud).
-    *   Основной запрос: `GetSalesOlap` для получения истории выручки по категориям.
-*   **Пути интеграции**:
-    *   `src/services/iiko/client.py` — клиент для работы с API iiko.
-    *   `src/services/data_loader/iiko_loader.py` — загрузчик данных в БД.
+### 4. iiko RESTO (Source of Truth)
+Единый источник данных о номенклатуре, продажах и остатках.
+*   **Тип**: iiko Chain Server (resto) API.
+*   **Скрипты синхронизации**: `src/scripts/sync_*.py` (products, stock, sales).
+
+### 5. Google Sheets (Control Panel)
+Инструмент для настройки мастер-данных (Safety Stock, планы продаж).
 
 ---
 
@@ -52,21 +37,24 @@
 
 ```mermaid
 graph TD
-    A[iikoCloud] -- "Склады/Продажи" --> B(NeuroSupply Backend)
+    A[iiko RESTO] -- "Склады/Продажи/Товары" --> B(NeuroSupply Backend)
     C[Google Sheets] -- "План/Настройки" --> B
     B -- "Черновик заказа" --> C
-    B -- "Уведомление" --> D[Telegram Bot]
-    D -- "Открывает" --> E[Mini App]
-    E -- "Подтверждение/Правки" --> B
-    B -- "Excel файл" --> D
+    B -- "Локализация (AI)" --> B
+    B -- "API / JSON" --> D[Web Dashboard / PWA]
+    B -- "Уведомление" --> E[Telegram Bot]
+    E -- "Открывает" --> F[Mini App - Cook]
+    F -- "Подтверждение" --> B
+    D -- "Утверждение менеджером" --> B
+    B -- "Excel файл" --> E
 ```
 
 ---
 
-## 🛠 Пути к критическим узлам для разработчика
+## 📂 Пути к критическим узлам
 
 1.  **Расчетная логика**: `src/services/calculation/engine_v2.py`
-2.  **Работа с таблицами**: `src/services/data_loader/sheets_client.py`
-3.  **Управление заказами**: `src/services/order_service.py`
-4.  **Модели БД**: `src/db/models/`
-5.  **Планировщик**: `src/scheduler.py`
+2.  **Веб-интерфейс**: `/web/src/`
+3.  **Синхронизация iiko**: `src/scripts/`
+4.  **Планировщик**: `src/scheduler.py`
+5.  **ИИ-локализация**: `src/scripts/translate_nomenclature.py`

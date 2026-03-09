@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any
 from sqlalchemy import Date, ForeignKey, Numeric, DateTime, Enum, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -10,6 +10,7 @@ import enum
 class OrderStatus(str, enum.Enum):
     DRAFT = "draft"
     VERIFIED_BY_COOK = "verified_by_cook"
+    APPROVED_BY_MANAGER = "approved_by_manager"
     EXPORTED_TO_PROCOB = "exported_to_procob"
 
 class SalesPlan(Base):
@@ -25,8 +26,8 @@ class Order(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     restaurant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurants.id"), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     status: Mapped[OrderStatus] = mapped_column(Enum(OrderStatus), default=OrderStatus.DRAFT)
-    items: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=[])
+    items: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
 
     restaurant = relationship("Restaurant")

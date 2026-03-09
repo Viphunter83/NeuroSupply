@@ -74,7 +74,7 @@ async def sync_mix_to_db(restaurant_id: uuid.UUID):
                 if probability > 0:
                     mix = ProductMix(
                         restaurant_id=restaurant.id,
-                        iiko_dish_id=iiko_id if iiko_id else dish_name, # Fallback to name if ID missing (legacy logic support)
+                        iiko_dish_id=dish_name, # Use explicit dish name to map with EmpiricalRecipe seamlessly
                         probability=probability,
                         # We could store share/price in DB too if we expanded the model, but for now just probability
                     )
