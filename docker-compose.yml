@@ -59,19 +59,37 @@ services:
       context: ./src/frontend
       dockerfile: Dockerfile
     container_name: neurosupply_frontend
-    ports:
-      - "8090:80"
     depends_on:
       - app
+
+  dashboard:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: neurosupply_dashboard
+    env_file:
+      - .env
+    depends_on:
+      - app
+
+  gateway:
+    image: nginx:alpine
+    container_name: neurosupply_gateway
+    volumes:
+      - ./nginx.proxy.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - dashboard
+    ports:
+      - "8081:80"
 
   tunnel:
     image: cloudflare/cloudflared:latest
     container_name: neurosupply_tunnel
     restart: always
-    command: tunnel --protocol http2 --url http://frontend:80
+    command: tunnel --protocol http2 --url http://gateway:80
     depends_on:
-      - frontend
-      - app
+      - gateway
 
 volumes:
   postgres_data:

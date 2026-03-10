@@ -23,22 +23,63 @@ const extraItems = ref([]);
 const extraSearchQuery = ref('');
 const isExtraLoading = ref(false);
 
+// Restaurant Selection State
+const restaurants = ref([]);
+const isSelectingRestaurant = ref(false);
+
 const getQueryParams = () => {
     const params = new URLSearchParams(window.location.search);
     return params.get('restaurant_id');
 }
 
+const fetchWithAuth = async (url, options = {}) => {
+    const headers = { ...options.headers };
+    if (window.Telegram?.WebApp?.initData) {
+        headers['X-Telegram-Init-Data'] = window.Telegram.WebApp.initData;
+    } else if (import.meta.env.DEV) {
+        headers['X-Dev-User-Id'] = '1'; // Default for local dev
+    }
+    return fetch(url, { ...options, headers });
+};
+
 const fetchOrder = async () => {
-    const rId = props.restaurantId || getQueryParams();
+    const queryRid = getQueryParams();
+    let rId = props.restaurantId || queryRid;
+    
     if (!rId) {
-        error.value = 'Не указан restaurant_id. Откройте приложение через Telegram.';
-        loading.value = false;
+        // Try to get from /me
+        try {
+            const meResp = await fetchWithAuth('/api/v1/auth/me');
+            if (meResp.ok) {
+                const meData = await meResp.json();
+                if (meData.restaurant?.id) {
+                    rId = meData.restaurant.id;
+                }
+            }
+        } catch (e) {
+            console.error('Failed to fetch /me', e);
+        }
+    }
+
+    if (!rId) {
+        // Instead of error, let's fetch list of restaurants
+        isSelectingRestaurant.value = true;
+        try {
+            const resp = await fetchWithAuth('/api/v1/analytics/restaurants');
+            if (resp.ok) {
+                restaurants.value = await resp.json();
+            }
+        } catch (e) {
+            error.value = 'Failed to load restaurants';
+        } finally {
+            loading.value = false;
+        }
         return;
     }
     activeRestaurantId.value = rId;
 
     try {
-        const response = await fetch(`/api/v1/order/latest?restaurant_id=${rId}`);
+        const response = await fetchWithAuth(`/api/v1/orders/latest?restaurant_id=${rId}`);
         if (response.status === 404) {
             isDone.value = true;
             loading.value = false;
@@ -97,7 +138,7 @@ const submitOrder = async () => {
     // IF MANAGER -> APPROVE FLOW
     if (props.isManager && orderStatus.value === 'verified_by_cook') {
         try {
-            const response = await fetch(`/api/v1/order/${orderId.value}/approve`, {
+            const response = await fetchWithAuth(`/api/v1/orders/${orderId.value}/approve`, {
                 method: 'POST'
             });
             if (!response.ok) throw new Error('Failed to approve');
@@ -142,7 +183,7 @@ const submitOrder = async () => {
             })
         };
 
-        const updateResponse = await fetch(`/api/v1/order/${orderId.value}`, {
+        const updateResponse = await fetchWithAuth(`/api/v1/orders/${orderId.value}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -151,7 +192,7 @@ const submitOrder = async () => {
         if (!updateResponse.ok) throw new Error('Failed to update order');
 
         // 2. Confirm (POST)
-        const response = await fetch(`/api/v1/order/${orderId.value}/confirm`, {
+        const response = await fetchWithAuth(`/api/v1/orders/${orderId.value}/confirm`, {
             method: 'POST'
         });
         if (!response.ok) throw new Error('Failed to confirm');
@@ -166,7 +207,7 @@ const fetchExtraItems = async () => {
     isExtraLoading.value = true;
     try {
         const query = extraSearchQuery.value ? `?q=${encodeURIComponent(extraSearchQuery.value)}` : '';
-        const response = await fetch(`/api/v1/products/extra${query}`);
+        const response = await fetchWithAuth(`/api/v1/products/extra${query}`);
         if (!response.ok) throw new Error('Failed to fetch extra products');
         extraItems.value = await response.json();
     } catch (e) {
@@ -223,6 +264,12 @@ const addExtraItem = (extraItem) => {
     setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 100);
 };
 
+const selectRestaurant = (id) => {
+    isSelectingRestaurant.value = false;
+    loading.value = true;
+    window.location.search = `?restaurant_id=${id}`;
+};
+
 onMounted(() => {
     fetchOrder();
 });
@@ -250,6 +297,22 @@ onMounted(() => {
     <!-- List -->
     <div class="p-4">
         <div v-if="loading" class="text-center py-10 text-gray-500">Loading...</div>
+        <div v-else-if="isSelectingRestaurant" class="flex flex-col gap-4 py-6">
+            <h2 class="text-lg font-bold text-center">Выберите ресторан / Chọn nhà hàng</h2>
+            <div 
+                v-for="rest in restaurants" 
+                :key="rest.id"
+                @click="selectRestaurant(rest.id)"
+                class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between hover:bg-gray-50 transition-colors cursor-pointer active:scale-95"
+            >
+                <div>
+                   <span class="font-bold text-gray-800">{{ rest.name }}</span>
+                   <p class="text-xs text-gray-400">ID: {{ rest.id.slice(0,8) }}</p>
+                </div>
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </div>
+            <div v-if="restaurants.length === 0" class="text-center text-gray-400">Нет доступных ресторанов</div>
+        </div>
         <div v-else-if="error" class="text-center py-10 text-red-500">{{ error }}</div>
         
         <div v-else>

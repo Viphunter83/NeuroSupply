@@ -44,28 +44,95 @@ async def cmd_start(message: types.Message):
         linked_rest_id = user.linked_restaurant_id if user else None
     
     webapp_url = settings.WEBAPP_URL or "http://localhost:5173"
+    # Ensure URL ends without trailing slash and point to /dashboard
+    webapp_url = webapp_url.rstrip('/')
+    dashboard_url = f"{webapp_url}/dashboard"
     
     kb = []
     if role == UserRole.COOK:
         # Cook Menu (Zero-UI inventory check)
         url = f"{webapp_url}?restaurant_id={linked_rest_id}" if linked_rest_id else webapp_url
-        kb.append([types.KeyboardButton(text="📝 Провести Инвентаризацию (Kiểm tra kho)", web_app=WebAppInfo(url=url))])
-        welcome_text = f"Добро пожаловать, {username}!\nНажмите кнопку ниже, чтобы провести инвентаризацию."
+        kb.append([types.KeyboardButton(text="📝 Инвентаризация (Kiểm tra kho)", web_app=WebAppInfo(url=url))])
+        
+        if not linked_rest_id:
+            welcome_text = (
+                f"Добро пожаловать, {username}!\n\n"
+                "⚠️ Вы не привязаны к ресторану. Пожалуйста, обратитесь к администратору.\n"
+                "Admin ID для привязки: `" + str(user_id) + "`"
+            )
+        else:
+            welcome_text = f"Добро пожаловать, {username}!\nНажмите кнопку ниже, чтобы провести инвентаризацию."
+            
     elif role == UserRole.MANAGER:
         # Manager Menu
-        kb.append([types.KeyboardButton(text="📦 Заказы на утверждение", web_app=WebAppInfo(url=f"{webapp_url}?view=manager&v=2"))])
+        manager_app_url = f"{dashboard_url}/orders?restaurant_id={linked_rest_id}" if linked_rest_id else dashboard_url
+        kb.append([types.KeyboardButton(text="📦 Панель управления (Dashboard)", web_app=WebAppInfo(url=manager_app_url))])
         kb.append([types.KeyboardButton(text="📊 Дневной Отчет")])
         welcome_text = f"Добро пожаловать, {username}! (Менеджер)\nВыберите действие в меню."
     else:
         # Admin Menu
-        kb.append([types.KeyboardButton(text="📦 Заказы на утверждение", web_app=WebAppInfo(url=f"{webapp_url}?view=manager&v=2"))])
+        kb.append([types.KeyboardButton(text="🚀 Открыть Дашборд", web_app=WebAppInfo(url=dashboard_url))])
         kb.append([types.KeyboardButton(text="📊 Дневной Отчет")])
         kb.append([types.KeyboardButton(text="⚙️ Настройки"), types.KeyboardButton(text="🛠 Принудительный расчет")])
-        welcome_text = f"Добро пожаловать, {username}! (Администратор)\nВыберите действие."
+        welcome_text = (
+            f"Добро пожаловать, {username}! (Администратор)\n\n"
+            "Вы можете использовать команду /link [user_id] [restaurant_uuid] для привязки пользователей."
+        )
         
     keyboard = types.ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+    await message.answer(welcome_text, reply_markup=keyboard, parse_mode="Markdown")
+
+@router.message(Command("link"))
+async def cmd_link(message: types.Message):
+    """
+    Command for admins to link users to restaurants.
+    Format: /link <user_id> <restaurant_uuid>
+    """
+    user_id = message.from_user.id
     
-    await message.answer(welcome_text, reply_markup=keyboard)
+    async with async_session_maker() as db:
+        # Check if requester is Admin
+        stmt = select(User).where(User.telegram_id == user_id)
+        result = await db.execute(stmt)
+        admin_user = result.scalar_one_or_none()
+        
+        if not admin_user or admin_user.role != UserRole.ADMIN:
+            await message.answer("❌ У вас нет прав администратора.")
+            return
+            
+        args = message.text.split()
+        if len(args) != 3:
+            # Try to list restaurants if args are missing
+            from src.db.models import Restaurant
+            res_list = await db.execute(select(Restaurant))
+            restaurants = res_list.scalars().all()
+            
+            rest_text = "\n".join([f"• `{r.id}` - {r.name}" for r in restaurants])
+            await message.answer(
+                "Использование: `/link <user_id> <restaurant_uuid>`\n\n"
+                "Список ресторанов:\n" + rest_text,
+                parse_mode="Markdown"
+            )
+            return
+            
+        target_user_id = int(args[1])
+        target_rest_uuid = args[2]
+        
+        try:
+            import uuid
+            rest_uuid = uuid.UUID(target_rest_uuid)
+            
+            # Update user
+            from sqlalchemy import update
+            stmt_update = update(User).where(User.telegram_id == target_user_id).values(linked_restaurant_id=rest_uuid)
+            await db.execute(stmt_update)
+            await db.commit()
+            
+            await message.answer(f"✅ Пользователь `{target_user_id}` привязан к ресторану `{target_rest_uuid}`.", parse_mode="Markdown")
+        except ValueError:
+            await message.answer("❌ Неверный формат UUID.")
+        except Exception as e:
+            await message.answer(f"❌ Ошибка: {e}")
 
 @router.message(Command("check"))
 async def cmd_check_order(message: types.Message):
@@ -73,6 +140,8 @@ async def cmd_check_order(message: types.Message):
     Direct link to the dashboard for order checking.
     """
     base_url = settings.WEBAPP_URL or "http://localhost:5173"
+    base_url = base_url.rstrip('/')
+    dashboard_url = f"{base_url}/dashboard"
     
     async with async_session_maker() as db:
         from src.db.models import Restaurant
@@ -86,14 +155,15 @@ async def cmd_check_order(message: types.Message):
     # If only one, show directly
     if len(restaurants) == 1:
         r = restaurants[0]
-        webapp_url = f"{base_url}?view=manager&restaurant_id={r.iiko_id}&v=2"
+        # Use v=2 and restaurant_id for legacy support if needed, or just dashboard
+        webapp_url = f"{dashboard_url}/orders?restaurant_id={r.id}"
         kb = [[types.InlineKeyboardButton(text=f"Open {r.name} 🚀", web_app=WebAppInfo(url=webapp_url))]]
         await message.answer(f"Dashboard for {r.name}:", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=kb))
     else:
         # Show list
         kb = []
         for r in restaurants:
-            webapp_url = f"{base_url}?view=manager&restaurant_id={r.iiko_id}&v=2"
+            webapp_url = f"{dashboard_url}/orders?restaurant_id={r.id}"
             kb.append([types.InlineKeyboardButton(text=f"Open {r.name}", web_app=WebAppInfo(url=webapp_url))])
         
         await message.answer("Select Restaurant to manage:", reply_markup=types.InlineKeyboardMarkup(inline_keyboard=kb))

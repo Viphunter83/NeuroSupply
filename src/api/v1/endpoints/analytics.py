@@ -97,6 +97,70 @@ async def get_forecast_vs_fact(
     return {"data": data}
 
 
+@router.get("/summary")
+async def get_dashboard_summary(
+    restaurant_id: uuid.UUID = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session),
+):
+    """
+    Returns aggregated summary for the dashboard home page.
+    """
+    target_rest_id = restaurant_id or current_user.linked_restaurant_id
+    if not target_rest_id:
+        raise HTTPException(status_code=400, detail="No restaurant linked")
+
+    # 1. Count active orders (DRAFT or VERIFIED)
+    from src.db.models.order import Order, OrderStatus
+    
+    orders_stmt = select(func.count(Order.id)).where(
+        Order.restaurant_id == target_rest_id,
+        Order.status.in_([OrderStatus.DRAFT, OrderStatus.VERIFIED_BY_COOK])
+    )
+    active_orders_count = (await db.execute(orders_stmt)).scalar() or 0
+
+    # 2. Count total products in stock (items that have balances for this restaurant)
+    from src.db.models.product import StockBalance
+    products_stmt = select(func.count(StockBalance.id)).where(
+        StockBalance.restaurant_id == target_rest_id,
+        StockBalance.amount > 0
+    )
+    total_products = (await db.execute(products_stmt)).scalar() or 0
+
+    # 3. Count anomalies today (join with orders to get date)
+    from src.db.models.analytics import Anomalies
+    
+    today = date.today()
+    anomalies_stmt = (
+        select(func.count(Anomalies.id))
+        .join(Order, Anomalies.order_id == Order.id)
+        .where(
+            Order.restaurant_id == target_rest_id,
+            func.date(Order.created_at) == today
+        )
+    )
+    anomalies_count = (await db.execute(anomalies_stmt)).scalar() or 0
+
+    return {
+        "active_orders": active_orders_count,
+        "total_products": total_products,
+        "anomalies_today": anomalies_count,
+        "ai_savings_pct": 12.4, # Mocked for now
+        "iiko_status": "OK"
+    }
+
+
+@router.get("/restaurants")
+async def list_restaurants(db: AsyncSession = Depends(get_session)):
+    """
+    Returns a list of all restaurants for selection in Mini App.
+    """
+    stmt = select(Restaurant).order_by(Restaurant.name)
+    result = await db.execute(stmt)
+    restaurants = result.scalars().all()
+    return [{"id": str(r.id), "name": r.name} for r in restaurants]
+
+
 @router.get("/prep-plan")
 async def get_prep_plan(
     restaurant_id: uuid.UUID = Query(None),

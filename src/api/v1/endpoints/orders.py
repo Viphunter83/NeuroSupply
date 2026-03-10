@@ -11,10 +11,47 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.deps import get_current_user, get_session, require_role
 from src.db.models.user import User, UserRole
+from src.db.models.order import Order, OrderStatus
 from src.schemas.order import OrderResponse, OrderUpdate
 from src.services.order_service import OrderService
 
 router = APIRouter()
+
+
+@router.get("/")
+async def list_orders(
+    restaurant_id: UUID = Query(None),
+    db: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    """List orders (Manager or Admin). Filters by restaurant_id if provided."""
+    require_role(current_user, UserRole.MANAGER, UserRole.ADMIN)
+    
+    target_rest_id = restaurant_id or current_user.linked_restaurant_id
+    
+    stmt = select(Order)
+    if target_rest_id:
+        stmt = stmt.where(Order.restaurant_id == target_rest_id)
+        
+    stmt = stmt.order_by(Order.created_at.desc())
+    res = await db.execute(stmt)
+    orders = res.scalars().all()
+    
+    # We need to include restaurant info and items count
+    from src.db.models.restaurant import Restaurant
+    result = []
+    for o in orders:
+        rest_stmt = select(Restaurant).where(Restaurant.id == o.restaurant_id)
+        rest = (await db.execute(rest_stmt)).scalar_one_or_none()
+        result.append({
+            "id": str(o.id),
+            "restaurant_name": rest.name if rest else "Unknown",
+            "status": o.status.value,
+            "items_count": len(o.items) if o.items else 0,
+            "created_at": o.created_at.isoformat(),
+            "items": o.items # Full items for details view if needed
+        })
+    return result
 
 
 @router.get("/latest", response_model=OrderResponse)

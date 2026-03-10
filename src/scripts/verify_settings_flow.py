@@ -26,7 +26,7 @@ async def run_verification():
     logger.info("Starting Verification: Settings Flow")
     
     # Mock SheetsClient
-    with patch("src.services.data_loader.sheets_client.SheetsClient") as MockClient:
+    with patch("src.services.order_service.SheetsClient") as MockClient:
         mock_instance = MockClient.return_value
         
         # Mock fetch_settings return value
