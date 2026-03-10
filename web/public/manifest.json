@@ -1,0 +1,17 @@
+{
+    "name": "NeuroSupply Dashboard",
+    "short_name": "NeuroSupply",
+    "description": "AI Inventory Management System for Restaurants",
+    "start_url": "/dashboard",
+    "display": "standalone",
+    "background_color": "#0a0a0a",
+    "theme_color": "#7c3aed",
+    "icons": [
+        {
+            "src": "/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
