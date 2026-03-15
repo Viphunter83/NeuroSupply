@@ -20,7 +20,10 @@ class IikoClient:
         self.password = settings.IIKO_PASSWORD
         self.token: Optional[str] = None
         self.resto_token: Optional[str] = None
-        self.client = httpx.AsyncClient(timeout=30.0, verify=False) # verify=False because of potential local cert issues
+        self.client = httpx.AsyncClient(
+            timeout=30.0, 
+            verify=settings.IIKO_SSL_VERIFY
+        ) 
 
     @retry(
         stop=stop_after_attempt(3),
@@ -145,7 +148,7 @@ class IikoClient:
 
         json_payload = {
             "reportType": "SALES",
-            "groupByRowFields": ["OpenDate.Typed", "DishName", "DishId"],
+            "groupByRowFields": ["OpenDate.Typed", "DishName", "DishId", "Department", "Department.Id"],
             "aggregateFields": ["DishAmountInt", "DishSumInt"],
             "filters": {
                 "OpenDate.Typed": {

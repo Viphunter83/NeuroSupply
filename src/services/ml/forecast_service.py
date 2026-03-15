@@ -34,43 +34,50 @@ class ForecastService:
 
     async def train_from_db(self, db: AsyncSession):
         """
-        Fetches real data from SalesFact and trains the model.
+        Fetches real data from SalesFact, joins with EmpiricalRecipe to calculate daily consumption,
+        and trains the model on actual Demand Dynamics.
         """
-        from src.db.models import SalesFact
-        from sqlalchemy import select, func
+        from src.db.models import SalesFact, EmpiricalRecipe
+        from sqlalchemy import select, func, or_, String
 
-        logger.info("Fetching real training data from database...")
+        logger.info("Fetching real training data and calculating consumption join...")
         
-        # We need daily revenue and day of week
-        stmt = select(
-            func.date(SalesFact.date).label("date"),
-            func.sum(SalesFact.revenue_rub).label("total_revenue")
-        ).group_by(func.date(SalesFact.date)).order_by("date")
+        # Calculate daily usage: sum(sales_qty * yield_rate)
+        # Using more robust join: Prefer ID, fallback to Name
+        stmt = (
+            select(
+                func.date(SalesFact.date).label("date"),
+                func.sum(SalesFact.revenue_rub).label("total_revenue"),
+                func.sum(SalesFact.quantity * EmpiricalRecipe.yield_rate).label("total_usage")
+            )
+            .select_from(SalesFact)
+            .join(
+                EmpiricalRecipe, 
+                or_(
+                    SalesFact.iiko_dish_id == func.cast(EmpiricalRecipe.dish_id, String),
+                    SalesFact.dish_name == EmpiricalRecipe.dish_name
+                )
+            )
+            .group_by(func.date(SalesFact.date))
+            .order_by("date")
+        )
         
         result = await db.execute(stmt)
         rows = result.all()
         
         if not rows or len(rows) < 7:
-            logger.warning("Not enough real data for training (< 7 days). Falling back to synthetic.")
+            logger.warning(f"Not enough joined real data for training ({len(rows) if rows else 0} days). Falling back to synthetic.")
             self.train_model()
             return
 
         data = []
         for r in rows:
-            # We treat 'total_revenue' as 'plan_amount' for training features 
-            # and 'total_revenue' * some_coef as 'usage' for mapping.
-            # In a real scenario, 'usage' would be actual ingredient consumption.
-            # For MVP, we use revenue as a proxy or fetch Dish Quantity.
-            
-            # Simplified: Feature = revenue, Target = revenue * base_coef (to learn noise/patterns)
-            # Better target: Sum of quantities of all dishes scaled?
-            
             d_obj = r.date if isinstance(r.date, date) else datetime.strptime(str(r.date), "%Y-%m-%d").date()
             
             data.append({
                 "plan_amount": float(r.total_revenue),
                 "weekday": d_obj.weekday(),
-                "usage": float(r.total_revenue) * 0.0015 # Placeholder target logic
+                "usage": float(r.total_usage)
             })
             
         df = pd.DataFrame(data)
@@ -95,7 +102,7 @@ class ForecastService:
             plan_base = 60000 if weekday >= 5 else 40000
             plan_amount = np.random.normal(plan_base, 5000)
             
-            base_coef = 0.0015 
+            base_coef = settings.DEFAULT_ML_BASE_NORM 
             if weekday >= 5: base_coef *= 1.1 
             
             actual_usage = plan_amount * base_coef * np.random.uniform(0.95, 1.05)
@@ -158,13 +165,22 @@ class ForecastService:
         predicted_usage = self._model.predict(X)[0]
         
         # We need to map this Absolute Usage back to a Multiplier for our static norms.
-        # Let's assume standard static norm expects: Usage = Plan * 0.0015
-        expected_standard_usage = plan_amount * 0.0015
+        # Use configurable baseline norm
+        expected_standard_usage = plan_amount * settings.DEFAULT_ML_BASE_NORM
         
         if expected_standard_usage == 0:
             return 1.0
             
+        # Dynamically calculate the multiplier
         multiplier = predicted_usage / expected_standard_usage
         
-        # Safety limits
-        return max(0.5, min(multiplier, 2.0))
+        # --- Stability Audit Fix ---
+        # Clamp multiplier between 0.7 and 1.3 to prevent extreme inventory anomalies
+        clamped_multiplier = max(0.7, min(1.3, multiplier))
+        
+        logger.info(
+            f"ML Prediction: {predicted_usage:.2f} | Standard: {expected_standard_usage:.2f} | "
+            f"Raw Multiplier: {multiplier:.2f} | Clamped: {clamped_multiplier:.2f}"
+        )
+        
+        return float(clamped_multiplier)

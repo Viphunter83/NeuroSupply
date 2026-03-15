@@ -34,12 +34,16 @@ async def test_order_anomaly_flow():
         items=initial_items
     )
     
-    # Mock Select Order
+    # Mock Select Order and Product
     async def mock_execute(stmt):
         mock_res = MagicMock()
-        sql = str(stmt)
+        sql = str(stmt).lower()
         if "orders" in sql:
              mock_res.scalar_one_or_none.return_value = draft_order
+        elif "products" in sql:
+             # Return a list with one product that has our PRODUCT_ID
+             test_product = Product(id=PRODUCT_ID, name_ru="Test Product", package_size=1.0)
+             mock_res.scalars.return_value.all.return_value = [test_product]
         return mock_res
     
     mock_session.execute = AsyncMock(side_effect=mock_execute)

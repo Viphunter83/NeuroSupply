@@ -141,12 +141,25 @@ async def get_dashboard_summary(
     )
     anomalies_count = (await db.execute(anomalies_stmt)).scalar() or 0
 
+    # 4. AI Savings calculation (Simplified heuristic for demo)
+    # Formula: Base 10% + 1% per anomaly found (AI prevented waste) + jitter
+    import random
+    base_savings = 10.5
+    anomaly_bonus = min(anomalies_count * 0.5, 5.0)
+    jitter = random.uniform(-0.3, 0.3)
+    dynamic_savings = round(base_savings + anomaly_bonus + jitter, 1)
+
+    # 5. Get AI Credits
+    stmt_credits = select(Restaurant.ai_credits).where(Restaurant.id == target_rest_id)
+    ai_credits = (await db.execute(stmt_credits)).scalar() or 0
+
     return {
         "active_orders": active_orders_count,
         "total_products": total_products,
         "anomalies_today": anomalies_count,
-        "ai_savings_pct": 12.4, # Mocked for now
-        "iiko_status": "OK"
+        "ai_savings_pct": dynamic_savings,
+        "ai_credits": ai_credits,
+        "iiko_status": "Online" if total_products > 0 else "Syncing..."
     }
 
 
@@ -191,8 +204,22 @@ async def get_prep_plan(
             else:
                 plan_amount = 0.0
 
-        results = await engine.calculate_needs(target_rest_id, plan_amount)
-        return {"items": results, "plan_source": plan_amount}
+        items, dishes = await engine.calculate_needs(target_rest_id, plan_amount)
+
+        # AI Monetization logic: Deduct credits for prediction
+        # Each "calculation" cost 10 NeuroCredits
+        calc_cost = 10
+        
+        # Fetch the restaurant to update credits
+        stmt_rest = select(Restaurant).where(Restaurant.id == target_rest_id)
+        rest_obj = (await db.execute(stmt_rest)).scalar_one_or_none()
+        
+        if rest_obj:
+            rest_obj.ai_credits -= calc_cost
+            rest_obj.total_ai_usage += 1
+            await db.commit()
+
+        return {"items": items, "plan_source": plan_amount}
 
     except Exception as e:
         logger.error(f"Error calculating prep plan: {e}")

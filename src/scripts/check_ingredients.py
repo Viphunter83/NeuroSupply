@@ -13,10 +13,18 @@ async def main():
     logger.info("Checking Ingredients in DB...")
     
     async with async_session_maker() as session:
-        result = await session.execute(select(Product).where(Product.category == "Ingredient"))
-        ingredients = result.scalars().all()
+        # Get count of all products
+        all_stmt = select(Product)
+        all_res = await session.execute(all_stmt)
+        all_prods = all_res.scalars().all()
+        logger.info(f"Total Products in DB: {len(all_prods)}")
+
+        # Find ingredients (let's assume any non-dish is an ingredient for diagnostic purposes)
+        ingredients = all_prods 
         
-        logger.info(f"Total Ingredients: {len(ingredients)}")
+        # Show distinct categories
+        cats = sorted(list(set(p.category for p in all_prods if p.category)))
+        logger.info(f"Distinct Categories: {cats[:10]}... (Total: {len(cats)})")
         
         with_package = [p for p in ingredients if p.package_size is not None]
         logger.info(f"Ingredients with parsed Package Size: {len(with_package)}")

@@ -1,15 +1,29 @@
 # Added by ggshield
 .cache_ggshield
+
+# Environment
 .env
 .env.bak
 *.bak
 secrets/
 
-# System and Environment
+# System
 .DS_Store
+
+# Python
 venv/
 __pycache__/
 *.pyc
+.pytest_cache/
 
 # Data
 data_samples/
+debug_data/
+
+# Web (Frontend & Dashboard)
+src/dashboard/node_modules/
+src/dashboard/.next/
+src/mini-app/node_modules/
+src/mini-app/dist/
+node_modules/
+web/

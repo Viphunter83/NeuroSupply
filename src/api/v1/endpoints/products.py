@@ -52,16 +52,17 @@ async def get_extra_products(
     stmt = stmt.order_by(Product.name_ru).limit(50)
     
     result = await db.execute(stmt)
-    rows = result.all()
+    # Use mappings() to avoid AttributeError: id when row format differs
+    rows = result.mappings().all()
     
     return [
         {
-            "product_id": str(r.id),
-            "product_name": r.name_ru,
-            "product_name_vn": r.name_vn or "",
-            "unit": r.unit or "шт",
-            "category": r.category or "Uncategorized",
-            "stock": float(getattr(r, "stock", 0)) if hasattr(r, "stock") else 0.0
+            "product_id": str(r["id"]),
+            "product_name": r["name_ru"],
+            "product_name_vn": r["name_vn"] or "",
+            "unit": r["unit"] or "шт",
+            "category": r["category"] or "Uncategorized",
+            "stock": float(r["stock"]) if "stock" in r else 0.0
         }
         for r in rows
     ]

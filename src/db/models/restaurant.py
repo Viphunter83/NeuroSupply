@@ -14,6 +14,9 @@ class Restaurant(Base):
     spreadsheet_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     time_zone: Mapped[str] = mapped_column(String, nullable=False, default="Europe/Moscow")
     settings: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    
+    ai_credits: Mapped[int] = mapped_column(Integer, default=1000)
+    total_ai_usage: Mapped[int] = mapped_column(Integer, default=0)
 
     def __repr__(self):
         return f"<Restaurant {self.name} ({self.id})>"

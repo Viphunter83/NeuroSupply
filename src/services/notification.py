@@ -89,7 +89,11 @@ class NotificationService:
             res_plan = await db.execute(stmt_plan)
             sales_plan = res_plan.scalar_one_or_none()
             
-            plan_amount = float(sales_plan.amount_rub) if sales_plan else 50000.0
+            if not sales_plan:
+                logger.info(f"No sales plan for restaurant {restaurant.name} today. Skipping notification.")
+                return None
+            
+            plan_amount = float(sales_plan.amount_rub)
             
             engine = CalculationEngineV2(db)
             results, _ = await engine.calculate_needs(restaurant.id, plan_amount)

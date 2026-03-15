@@ -90,8 +90,10 @@ async def sync_stock_balances():
                     continue
                 
                 # Resolve restaurant
-                restaurant = rest_by_iiko_id.get(store_uuid) or default_restaurant
+                restaurant = rest_by_iiko_id.get(store_uuid)
                 if not restaurant:
+                    # In single-restaurant setups, we might fallback, but for production 
+                    # it is safer to skip if mapping is missing
                     skipped += 1
                     continue
                 

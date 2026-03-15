@@ -18,6 +18,8 @@ from src.core.config import settings
 from src.db.models.restaurant import Restaurant
 from src.db.models.user import User, UserRole
 from src.db.session import async_session_maker
+import jwt
+from src.core.security import decode_token
 
 logger = logging.getLogger(__name__)
 
@@ -84,21 +86,53 @@ def _validate_telegram_init_data(init_data: str, bot_token: str) -> dict:
 # ──────────────────────────────────────────────
 
 async def get_current_user(
+    authorization: Optional[str] = Header(None),
     x_telegram_init_data: Optional[str] = Header(None),
     x_dev_user_id: Optional[int] = Header(None),
     db: AsyncSession = Depends(get_session),
 ) -> User:
     """
-    Authenticates the user from Telegram WebApp initData.
-
-    In development mode (APP_ENV=development), allows X-Dev-User-Id header
-    for Swagger/local testing.
+    Authenticates the user from Supabase JWT (Authorization: Bearer <token>) 
+    OR Telegram WebApp initData.
     """
 
     telegram_id: Optional[int] = None
+    supabase_user_id: Optional[str] = None
 
-    # --- 1. Try Telegram initData (production path) ---
-    if x_telegram_init_data:
+    # --- 0. Try Custom JWT (Internal) ---
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        payload = decode_token(token)
+        if payload:
+            user_id_sub = payload.get("sub")
+            if user_id_sub:
+                try:
+                    user_uuid = uuid.UUID(user_id_sub)
+                    stmt = select(User).where(User.id == user_uuid)
+                    result = await db.execute(stmt)
+                    user = result.scalar_one_or_none()
+                    if user:
+                        return user
+                except ValueError:
+                    pass
+
+    # --- 1. Try Supabase JWT (Authorization header) ---
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+        try:
+            payload = jwt.decode(
+                token, 
+                settings.SUPABASE_JWT_SECRET, 
+                algorithms=["HS256"], 
+                options={"verify_aud": False}
+            )
+            # Supabase stores sub as UUID
+            supabase_user_id = payload.get("sub")
+        except Exception as e:
+            logger.debug(f"Not a valid Supabase JWT (might be internal): {e}")
+    
+    # --- 2. Try Telegram initData (legacy path) ---
+    if not supabase_user_id and x_telegram_init_data:
         try:
             user_obj = _validate_telegram_init_data(
                 x_telegram_init_data, settings.BOT_TOKEN
@@ -108,25 +142,38 @@ async def get_current_user(
             logger.warning(f"Invalid Telegram initData: {e}")
             raise HTTPException(status_code=401, detail=f"Invalid Telegram authorization: {e}")
 
-    # --- 2. Dev fallback (only in development mode) ---
-    if not telegram_id and settings.APP_ENV == "development" and x_dev_user_id:
-        logger.warning(f"DEV MODE: Using X-Dev-User-Id={x_dev_user_id}")
-        telegram_id = x_dev_user_id
-
+    # --- 2. Dev & Web fallback ---
+    if telegram_id is None:
+        # Check for generic web user headers or fallback to demo in dev
+        if x_dev_user_id:
+            logger.warning(f"WEB MODE: Using X-Dev-User-Id={x_dev_user_id}")
+            telegram_id = x_dev_user_id
+        elif settings.APP_ENV == "development":
+            # Automatic fallback to a default demo ID for local development/preview
+            logger.warning("DEV MODE: No auth headers provided. Using DEFAULT_DEMO_USER_ID (999)")
+            telegram_id = 999 
+    
     # --- 3. No auth at all → reject ---
-    if not telegram_id:
+    if telegram_id is None and supabase_user_id is None:
         raise HTTPException(
             status_code=401,
-            detail="Authentication required. Provide X-Telegram-Init-Data header.",
+            detail="Authentication required. Provide Bearer token or X-Telegram-Init-Data header.",
         )
 
     # --- 4. DB Lookup ---
-    stmt = select(User).where(User.telegram_id == telegram_id)
+    if supabase_user_id:
+        stmt = select(User).where(User.supabase_user_id == supabase_user_id)
+    else:
+        stmt = select(User).where(User.telegram_id == telegram_id)
+    
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
 
     if not user:
-        # Auto-create user & link to first restaurant
+        logger.info(f"User not found in DB. Auto-creating for {'Supabase' if supabase_user_id else 'Telegram'} ID.")
+        
+        # Split logic for auto-creation
+        # Link to first restaurant found in DB
         stmt_rest = select(Restaurant).limit(1)
         res_rest = await db.execute(stmt_rest)
         restaurant = res_rest.scalar_one_or_none()
@@ -142,12 +189,20 @@ async def get_current_user(
             await db.flush()
 
         user = User(
+            id=uuid.uuid4(),
             telegram_id=telegram_id,
+            supabase_user_id=supabase_user_id,
             linked_restaurant_id=restaurant.id,
+            role=UserRole.COOK # Default to COOK for safety
         )
         db.add(user)
-        await db.commit()
-        await db.refresh(user)
+        try:
+            await db.commit()
+            await db.refresh(user)
+        except Exception as e:
+            logger.error(f"Failed to create user: {e}")
+            await db.rollback()
+            raise HTTPException(status_code=500, detail="Failed to initialize user session")
 
     return user
 

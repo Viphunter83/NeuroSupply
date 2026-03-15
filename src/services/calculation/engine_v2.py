@@ -47,10 +47,21 @@ class CalculationEngineV2:
         # 1.2 Tech Cards
         # Calculate Dish Quantities first to filter TechCards
         dish_needs: Dict[str, float] = {}
+        
+        def clean_dish_name(name: str) -> str:
+            # Remove common iiko suffixes like " (доставка)", " (самовывоз)"
+            return name.replace(" (доставка)", "").replace("(доставка)", "").strip()
+
         for pm in mixes:
             # Formula: Qty = (Plan / 1000) * Probability * ML_Multiplier
             qty = (sales_plan_rub / 1000.0) * float(pm.probability) * ml_multiplier
-            dish_needs[str(pm.iiko_dish_id)] = qty
+            raw_id = str(pm.iiko_dish_id)
+            dish_needs[raw_id] = qty
+            
+            # Add cleaned name to needs if it's different
+            cleaned = clean_dish_name(raw_id)
+            if cleaned != raw_id:
+                dish_needs[cleaned] = dish_needs.get(cleaned, 0.0) + qty
 
         dish_ids = []
         dish_names = []
@@ -60,7 +71,7 @@ class CalculationEngineV2:
             except ValueError:
                 dish_names.append(d_id_str)
         
-        # Filter recipes at SQL level instead of loading all into memory
+        # Filter recipes at SQL level
         conditions = []
         if dish_ids:
             conditions.append(EmpiricalRecipe.dish_id.in_(dish_ids))

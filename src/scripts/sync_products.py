@@ -32,9 +32,40 @@ UNIT_MAP = {
     '09760c59-96a2-438e-a021-93c21ad5680b': 'гр',
 }
 
+import re
+
 def normalize_name(name: str) -> str:
     if not name: return ""
     return name.lower().strip().replace("  ", " ")
+
+def parse_package_size(name: str) -> tuple[Optional[float], Optional[str]]:
+    """
+    Extracts package size and unit from name.
+    Example: "Lợi 0.54 kg" -> (0.54, "кг")
+    Example: "Banh bao 6 шт" -> (6.0, "шт")
+    """
+    # Pattern: Digit (maybe comma) + space? + unit
+    pattern = r"(\d+[.,]?\d*)\s*(кг|kg|гр|gr|g|шт|pcs|порц)"
+    match = re.search(pattern, name.lower())
+    if not match:
+        return None, None
+        
+    val_str = match.group(1).replace(",", ".")
+    unit_str = match.group(2)
+    
+    try:
+        val = float(val_str)
+        # Normalize unit
+        if unit_str in ['кг', 'kg']: unit = 'кг'
+        elif unit_str in ['гр', 'gr', 'g']: 
+            val = val / 1000.0 # Convert to base unit kg
+            unit = 'кг'
+        elif unit_str in ['шт', 'pcs']: unit = 'шт'
+        else: unit = unit_str
+        
+        return val, unit
+    except ValueError:
+        return None, None
 
 async def sync_products():
     client = IikoClient()
@@ -68,6 +99,9 @@ async def sync_products():
 
                 unit_name = UNIT_MAP.get(rp_unit_id, 'шт') # Default to 'шт' if unknown
                 
+                # Parse package info
+                pkg_size, pkg_unit = parse_package_size(rp_name)
+                
                 # Check if it exists in DB
                 product = db_by_id.get(rp_id) or db_by_name.get(normalize_name(rp_name))
                 
@@ -76,6 +110,9 @@ async def sync_products():
                     product.iiko_id = rp_id # Ensure it has the resto ID
                     product.name_ru = rp_name
                     product.unit = unit_name
+                    if pkg_size:
+                        product.package_size = pkg_size
+                        product.package_unit = pkg_unit
                     # preserve name_vn and other fields if they exist
                     updated_count += 1
                 else:
@@ -84,7 +121,9 @@ async def sync_products():
                         iiko_id=rp_id,
                         name_ru=rp_name,
                         unit=unit_name,
-                        category=str(rp.get('category', ''))
+                        category=str(rp.get('category', '')),
+                        package_size=pkg_size,
+                        package_unit=pkg_unit
                     )
                     session.add(new_prod)
                     inserted_count += 1

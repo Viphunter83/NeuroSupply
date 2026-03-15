@@ -1,6 +1,10 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
+    # ML Settings
+    DEFAULT_ML_BASE_NORM: float = 0.0015 # Expected usage per 1 RUB of revenue
+    
+    # Calculation Settings
     APP_ENV: str = "development"
     
     # Google Integration
@@ -24,9 +28,19 @@ class Settings(BaseSettings):
     IIKO_PASSWORD: str = ""
     IIKO_CHAIN_SERVER: str = ""
     IIKO_ORG_ID: str = ""
+    IIKO_SSL_VERIFY: bool = False # Default to False for now, but configurable
+    
+    PROCOB_API_KEY: str = "" # For future integration
     
     BOT_TOKEN: str = ""
     WEBAPP_URL: str = ""
+    
+    SUPABASE_JWT_SECRET: str
+    
+    # Custom JWT Auth
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
 
     # AI (OpenAI / ProxyAPI)
     OPENAI_API_KEY: str = ""
@@ -34,10 +48,11 @@ class Settings(BaseSettings):
     AI_MODEL: str = "gpt-4o"
 
     # CORS
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:8090"
+    CORS_ORIGINS: str = "*"
 
     # Feature Flags
-    USE_MOCK_DATA: bool = True
+    USE_MOCK_DATA: bool = False
+    DEMO_RESTAURANT_ID: str = "00000000-0000-0000-0000-000000000000"
     SAFETY_STOCK_RATIO: float = 1.1
 
     @property

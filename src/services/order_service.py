@@ -12,6 +12,7 @@ from openpyxl.styles import Font, Alignment, Border, Side
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 import io
+import pytz
 
 from src.db.models import Order, OrderStatus, Restaurant, Product
 from src.db.models.analytics import Anomalies
@@ -84,15 +85,22 @@ class OrderService:
     async def get_active_order(self, restaurant_id: UUID) -> Optional[Order]:
         """
         Fetch the latest active order (DRAFT or VERIFIED_BY_COOK) 
-        for a specific restaurant created TODAY.
+        for a specific restaurant created TODAY in its local timezone (MSK).
         """
-        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        # All company restaurants are in RF, using MSK (UTC+3)
+        msk_tz = pytz.timezone("Europe/Moscow")
+        now_msk = datetime.now(msk_tz)
+        today_start_msk = now_msk.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Convert MSK start to UTC for DB query
+        today_start_utc = today_start_msk.astimezone(pytz.UTC)
+        
         stmt = (
             select(Order)
             .where(
                 Order.restaurant_id == restaurant_id,
                 Order.status.in_([OrderStatus.DRAFT, OrderStatus.VERIFIED_BY_COOK]),
-                Order.created_at >= today_start
+                Order.created_at >= today_start_utc
             )
             .order_by(Order.created_at.desc())
             .limit(1)
@@ -166,32 +174,35 @@ class OrderService:
         except Exception as e:
             logger.error(f"Failed to export draft to sheet: {e}")
 
-    async def generate_draft_order(self, restaurant_id: UUID, sales_plan_rub: float) -> Order:
-        """
-        Calculates needs and creates a new DRAFT order.
-        Fetches dynamic settings (Safety Stock, Transit) from Google Sheets first.
-        """
-        # 0. Fetch Settings from Sheets (if possible)
-        # We need restaurant object first
+        # 0. Idempotency Check: Don't create duplicate Drafts for the same day
+        existing_active = await self.get_active_order(restaurant_id)
+        if existing_active and existing_active.status == OrderStatus.DRAFT:
+            logger.info(f"Draft order already exists for restaurant {restaurant_id} today. Updating instead of creating.")
+            # Optional: We could update items here, but for MVP we return existing to avoid confusion
+            return existing_active
+
+        # 0.1 Fetch Settings from Sheets (if possible)
         stmt = select(Restaurant).where(Restaurant.id == restaurant_id)
         result = await self.db.execute(stmt)
         restaurant = result.scalar_one_or_none()
         
         calc_settings = {}
-        if restaurant and restaurant.spreadsheet_id:
-            try:
-                client = SheetsClient(restaurant.spreadsheet_id)
-                loop = asyncio.get_running_loop()
-                # Run in executor to avoid blocking main thread
-                calc_settings = await loop.run_in_executor(None, client.fetch_settings)
-                logger.info(f"Fetched settings for {restaurant.name}: {calc_settings}")
-            except Exception as e:
-                logger.warning(f"Could not fetch settings from sheet, using defaults: {e}")
+        if restaurant:
+            db_settings = restaurant.settings or {}
+            if db_settings.get("safety_stock_ratio") is not None:
+                calc_settings["safety_stock"] = db_settings.get("safety_stock_ratio")
+                calc_settings["days_in_transit"] = db_settings.get("days_in_transit", 0)
+                logger.info(f"Using DB settings for {restaurant.name}: {calc_settings}")
+            elif restaurant.spreadsheet_id:
+                try:
+                    client = SheetsClient(restaurant.spreadsheet_id)
+                    loop = asyncio.get_running_loop()
+                    calc_settings = await loop.run_in_executor(None, client.fetch_settings)
+                    logger.info(f"Fetched settings from Sheets for {restaurant.name}: {calc_settings}")
+                except Exception as e:
+                    logger.warning(f"Could not fetch settings from sheet, using defaults: {e}")
 
         # 1. Calculate Needs (using V2 Logic)
-        # Now returns tuple: (items, dish_breakdown)
-        # Pass settings if active
-        # settings dict keys: 'safety_stock', 'days_in_transit'
         ss = calc_settings.get("safety_stock")
         dit = calc_settings.get("days_in_transit", 0)
         
@@ -212,13 +223,8 @@ class OrderService:
         await self.db.commit()
         await self.db.refresh(new_order)
         
-        # 3. Export to Sheets (Feedback Loop)
-        # 3.1 Export Draft Order (Tab 4)
-        # We need to await these exports or fire-and-forget?
-        # Awaiting ensures user sees it immediately.
+        # 3. Export to Sheets
         await self._export_draft_to_sheet(restaurant_id, items)
-        
-        # 3.2 Export Dish Calculation (Tab 2a) - NEW
         await self._export_dish_calc_to_sheet(restaurant_id, dish_breakdown)
         
         return new_order

@@ -291,20 +291,31 @@ class SheetsClient:
         """
         Finds the plan amount for a specific date (DD.MM.YYYY).
         """
-        sheet = self.client.open_by_key(self.sheet_id)
-        ws = sheet.worksheet("2. ПЛАН ПРОДАЖ 📅")
-        
-        # Get all records starting from row 4
-        # expected headers in row 4
-        records = ws.get_all_records(head=4) 
-        
-        for row in records:
-            if row.get("Дата") == date_str:
-                try:
-                    val = str(row.get("Сумма (План)"))
-                    return float(val.replace(",", "").replace("₽", "").strip())
-                except:
-                    return 0.0
+        try:
+            sheet = self.client.open_by_key(self.sheet_id)
+            ws = sheet.worksheet("2. ПЛАН ПРОДАЖ 📅")
+            
+            # Get all records starting from row 4
+            records = ws.get_all_records(head=4) 
+            
+            for row in records:
+                # Fuzzy date matching (allow for trailing dots or spaces)
+                row_date = str(row.get("Дата", "")).strip()
+                if row_date == date_str or row_date.rstrip('.') == date_str.rstrip('.'):
+                    val_raw = row.get("Сумма (План)")
+                    if val_raw is None or val_raw == "":
+                        continue
+                        
+                    try:
+                        # Handle various number formats: 150,685.00, 150 685, 150685 ₽
+                        clean_val = str(val_raw).replace(",", "").replace("₽", "").replace("\xa0", "").replace(" ", "").strip()
+                        return float(clean_val)
+                    except (ValueError, TypeError) as e:
+                        logger.warning(f"Failed to parse plan value '{val_raw}' on {date_str}: {e}")
+                        continue
+        except Exception as e:
+            logger.error(f"Error fetching plan for date {date_str}: {e}")
+            
         return 0.0
 
     def get_or_create_worksheet(self, title: str):

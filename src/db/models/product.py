@@ -36,6 +36,7 @@ class EmpiricalRecipe(Base):
     __tablename__ = "empirical_recipes"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    restaurant_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("restaurants.id"), nullable=True) # Optional for global fallback
     dish_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), index=True, nullable=True)
     dish_name: Mapped[str] = mapped_column(String, index=True, nullable=False)
     ingredient_name: Mapped[str] = mapped_column(String, index=True, nullable=False)

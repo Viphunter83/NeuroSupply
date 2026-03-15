@@ -20,6 +20,9 @@ class SalesPlan(Base):
     restaurant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("restaurants.id"), nullable=False)
     date: Mapped[date] = mapped_column(Date, nullable=False)
     amount_rub: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 class Order(Base):
     __tablename__ = "orders"

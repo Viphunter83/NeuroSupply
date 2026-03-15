@@ -1,4 +1,4 @@
-# Техническая архитектура NeuroSupply (v1.3 - Production)
+# Техническая архитектура NeuroSupply (v2.2.1 - Premium)
 
 Система NeuroSupply представляет собой модульный Python-сервис, объединяющий расчетную логику, интеграции с внешними SaaS (iiko, Google) и современные интерфейсы взаимодействия (Web Dashboard, PWA, Telegram).
 
@@ -40,10 +40,11 @@ graph TD
     A[iiko RESTO] -- "Склады/Продажи/Товары" --> B(NeuroSupply Backend)
     C[Google Sheets] -- "План/Настройки" --> B
     B -- "Черновик заказа" --> C
-    B -- "Локализация (AI)" --> B
-    B -- "API / JSON" --> D[Web Dashboard / PWA]
+    B -- "JWT Auth" --> D[Web Dashboard / PWA]
+    D -- "Управление" --> B
     B -- "Уведомление" --> E[Telegram Bot]
-    E -- "Открывает" --> F[Mini App - Cook]
+    E -- "Открывает" --> F[Mobile App - Cook]
+    F -- "JWT Auth" --> B
     F -- "Подтверждение" --> B
     D -- "Утверждение менеджером" --> B
     B -- "Excel файл" --> E

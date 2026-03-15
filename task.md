@@ -11,11 +11,17 @@
     - [ ] Implement multi-restaurant logic
 
 # Audit & Analysis
-- [x] Integration Verification
-    - [x] Bot Integration Check
-    - [x] AI Service Check
-    - [x] iiko Integration Check
-    - [x] Google Sheets Logic vs Instruction Audit
+- [x] Проанализировать документацию и логику системы (AI, iiko, ML)
+- [x] Аудит контейнеров и внешних Cloudflare ссылок
+- [x] Реализовать оптимизации БД (индексы)
+- [x] Обновить AI-движок для обучения на реальных данных
+- [x] Проверить флоу аномалий и интеграционные тесты
+- [x] Аудит интеграции с Procob и мульти-ролевой модели
+- [x] Подготовка финального отчета и PROJECT_STATE.md
+
+## План по Procob
+- [ ] Реализовать сервис экспорта в Procob API (после получения документации из GitLab)
+- [ ] Настроить автоматический переход в статус `exported_to_procob` после аппрува менеджером
 
 # Phase 2: Multi-Restaurant Support
 - [x] Database Schema Update

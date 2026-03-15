@@ -1,46 +1,47 @@
-# NeuroSupply: Project State & Technical Handoff (March 2026)
+# NeuroSupply: Состояние проекта и техническая передача (Март 2026)
 
-## 1. Project Overview & Current State
-**NeuroSupply** is a fully integrated, automated inventory and ordering system for restaurant chains. The core value proposition is stripping away the mental load of ordering from the cooks by predicting needs using AI (Linear Regression on historical iiko sales), Google Sheets integrations for master data, and both Telegram Mini Apps and Web-Dashboards for execution.
+## 1. Обзор проекта и текущее состояние
+**NeuroSupply** — это полностью интегрированная автоматизированная система инвентаризации и заказа для ресторанных сетей. Основная ценность продукта заключается в снятии когнитивной нагрузки с поваров путем прогнозирования потребностей с использованием ИИ (линейная регрессия на основе исторических продаж iiko), интеграции с Google Таблицами для мастер-данных, а также использования Telegram Mini Apps и веб-дашбордов для выполнения операций.
 
-**Status:** The system is **PRODUCTION-READY (v0.8.0-beta)**. The architecture has been hardened against external risks (Telegram blocking) and localized for Vietnamese staff.
-
----
-
-## 2. Key Accomplishments (March 2026 - Production Hardening)
-
-### 2.1 Iiko Resto API Native Integration
-*   **Centralized Nomenclature:** Migrated from iiko Cloud to **iiko resto (Chain Server)** to resolve UUID discrepancies.
-*   **Automated Sync:** Implemented a multi-stage daily pipeline (`01:30 - 06:00`) for Products, SalesFacts, Recipes, and StockBalances.
-*   **Data Integrity:** Added `UNIQUE` constraints across `products`, `stock_balances`, and `sales_plans` tables.
-
-### 2.2 Vietnamese Localization (AI-Driven)
-*   **Mass Translation:** 100% of the nomenclature (1,126 items) translated from Russian to Vietnamese using LLM (GPT-4o).
-*   **Dual-Language UI:** All interfaces (Web & Bot) now display names in both languages, ensuring operational clarity for multi-ethnic teams.
-
-### 2.3 Web-Dashboard & PWA (Stability Layer)
-*   **Next.js 15+ Frontend:** Created a premium management dashboard in `/web` using **shadcn/ui** and **Glassmorphism** design.
-*   **PWA Support:** Implemented "Add to Home Screen" (manifest.json). The system now works as a standalone mobile app, mitigating risks of Telegram blocking in Russia (April 2026 forecast).
-*   **Modules:** 
-    *   `Dashboard`: Real-time stats and health check.
-    *   `Stock`: Detailed inventory tracking.
-    *   `Orders`: Professional procurement interface for managers.
-
-### 2.4 Cloudflare Tunneling
-*   **Live Access:** System is served via `trycloudflare.com` for instant client demonstration.
-*   **URL:** `https://nova-hundreds-her-peoples.trycloudflare.com`
+**Статус:** Система **ГОТОВА К ЭКСПЛУАТАЦИИ (v2.2.1 Premium)**. Архитектура защищена от внешних рисков, автономна (custom JWT auth) и локализована для работы многонационального персонала.
 
 ---
 
-## 3. Architecture Context
+## 2. Ключевые достижения (Март 2026 — Укрепление продакшена)
+
+### 2.1 Нативная интеграция с iiko Resto API
+*   **Централизованная номенклатура:** Переход с iiko Cloud на **iiko resto (Chain Server)** для устранения расхождений в UUID.
+*   **Автоматическая синхронизация:** Реализован многоэтапный ежедневный цикл (`01:30 - 06:00`) для товаров, фактов продаж, рецептов и остатков.
+*   **Целостность данных:** Добавлены ограничения `UNIQUE` для таблиц товаров, остатков и планов продаж.
+
+### 2.2 Локализация на вьетнамский язык (с помощью ИИ)
+*   **Массовый перевод:** 100% номенклатуры (1 126 позиций) переведено с русского на вьетнамский с использованием ИИ (GPT-4o).
+*   **Двуязычный интерфейс:** Во всех интерфейсах (Web и Bot) названия отображаются на двух языках, что обеспечивает ясность работы для интернациональных команд.
+
+### 2.3 Веб-дашборд и PWA (Слой стабильности)
+*   **Frontend на Next.js 15+:** Создан современный дашборд управления в директории `/web` с использованием **shadcn/ui** и дизайна в стиле Glassmorphism.
+*   **Поддержка PWA:** Реализована функция "Добавить на главный экран". Теперь система работает как автономное мобильное приложение.
+*   **Модули:** 
+    *   `Dashboard`: Статистика и проверка состояния системы в реальном времени.
+    *   `Stock`: Детальное отслеживание инвентаризации.
+    *   `Orders`: Профессиональный интерфейс закупок для менеджеров.
+
+### 2.4 Туннелирование Cloudflare
+*   **Живой доступ:** Система работает через `trycloudflare.com` для мгновенной демонстрации.
+*   **URL:** `https://search-treated-surname-archive.trycloudflare.com`
+
+### 2.5 Стабильность расчетов (Аудит 11 марта)
+*   **ИИ-множитель:** Временно зафиксирован на значении `1.0` в `ForecastService` для устранения аномальных отчетов до переобучения модели.
+*   **Упаковки:** Реализован парсинг размеров упаковок из названий iiko с помощью регулярных выражений.
+
+---
+
+## 3. Контекст архитектуры
 
 *   **Backend:** FastAPI + SQLAlchemy.
-*   **Calculation Engine:** `engine_v2.py`. Formula: `Sales Plan -> Dish Qty -> Ingredient Qty`.
-*   **Frontend A:** Vue 3 (Legacy Telegram Bot).
+*   **Движок расчетов:** `engine_v2.py`. Формула: `План продаж -> Кол-во блюд -> Кол-во ингредиентов`.
+*   **Frontend A:** Vue 3 (Telegram Bot).
 *   **Frontend B:** Next.js 15+ (Production Web Dashboard / PWA).
-*   **Database:** PostgreSQL 15 + Alembic.
-
----
 
 ## 4. Development & Maintenance Guide
 
@@ -63,5 +64,5 @@ docker exec neurosupply_api python3 -m src.scripts.translate_nomenclature
 ---
 
 ## 5. Security & Risk Mitigation
-*   **Telegram Blocking (Russia):** The Web Dashboard is the primary fallback. 
-*   **Authentication:** RBAC implemented via Telegram ID and verified sessions.
+*   **Authentication:** RBAC implemented via custom JWT (email/password). Telegram login is optional.
+*   **Data Integrity:** Validated using real-world IIko data exports (34,000+ records).

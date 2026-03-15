@@ -1,0 +1,17 @@
+{
+  "name": "NeuroSupply",
+  "short_name": "NeuroSupply",
+  "description": "System for automated supply chain management",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -46,14 +46,14 @@ async def sync_empirical_recipes_wrapper():
     except Exception as e:
         logger.error(f"❌ [Scheduler] Empirical Recipes Sync Failed: {e}", exc_info=True)
 
-async def sync_job_wrapper():
-    """Syncs master data from Sheets at 04:00 AM."""
-    logger.info(f"⏰ [Scheduler] Starting Sync Job at {datetime.now()}")
+async def sync_master_data_wrapper():
+    """Syncs master data (Product Mix) from Sheets at 04:00 AM."""
+    logger.info(f"⏰ [Scheduler] Starting Master Data (Product Mix) Sync Job at {datetime.now()}")
     try:
         await sync_all_restaurants()
-        logger.info("✅ [Scheduler] Sync Job Completed")
+        logger.info("✅ [Scheduler] Master Data Sync Completed")
     except Exception as e:
-        logger.error(f"❌ [Scheduler] Sync Job Failed: {e}", exc_info=True)
+        logger.error(f"❌ [Scheduler] Master Data Sync Failed: {e}", exc_info=True)
 
 async def sync_stock_balances_wrapper():
     """Syncs stock balances from iiko at 05:00 AM."""
@@ -108,11 +108,11 @@ def start_scheduler():
         replace_existing=True
     )
 
-    # 3. Sync Job (Sheets): Every day at 04:00
+    # 3. Master Data Sync Job (Sheets) - Syncs Product Mix for Multi-Restaurant support
     scheduler.add_job(
-        sync_job_wrapper, 
+        sync_master_data_wrapper, 
         trigger=CronTrigger(hour=4, minute=0), 
-        id="daily_sync", 
+        id="daily_master_data_sync", 
         replace_existing=True
     )
 
@@ -133,7 +133,7 @@ def start_scheduler():
     )
     
     scheduler.start()
-    logger.info("🚀 Scheduler started. Jobs: [01:30 products, 02:00 sales_facts, 03:00 recipes, 04:00 sync, 05:00 stock, 06:00 calc]")
+    logger.info("🚀 Scheduler started. Jobs: [01:30 products, 02:00 sales_facts, 03:00 recipes, 04:00 master_data, 05:00 stock, 06:00 calc]")
 
 def shutdown_scheduler():
     logger.info("🛑 Stopping Scheduler...")
